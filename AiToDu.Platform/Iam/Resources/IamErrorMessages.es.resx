@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+<resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+<resheader name="version"><value>2.0</value></resheader>
+<data name="InvalidEmail" xml:space="preserve"><value>Ingresa un correo válido.</value></data>
+<data name="InvalidPassword" xml:space="preserve"><value>Usa al menos 12 caracteres y como máximo 72 bytes UTF-8.</value></data>
+<data name="RequiredFields" xml:space="preserve"><value>Completa tu nombre y organización (máximo 160 caracteres cada uno).</value></data>
+<data name="DuplicateEmail" xml:space="preserve"><value>Este correo ya está registrado.</value></data>
+<data name="InvalidCredentials" xml:space="preserve"><value>El correo o la contraseña son incorrectos.</value></data>
+<data name="AccountDisabled" xml:space="preserve"><value>Esta cuenta está deshabilitada. Contacta al administrador.</value></data>
+<data name="Forbidden" xml:space="preserve"><value>No tienes permiso para esta acción.</value></data>
+<data name="UserNotFound" xml:space="preserve"><value>No se encontró al usuario.</value></data>
+<data name="InvalidRole" xml:space="preserve"><value>Selecciona operario de almacén o vendedor.</value></data>
+<data name="CannotDisableSelf" xml:space="preserve"><value>No puedes deshabilitar tu propia cuenta.</value></data>
+</root>

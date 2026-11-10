@@ -30,11 +30,11 @@ Audit history currently loads with the aggregate. Larger histories will need rea
 
 ## Integration boundaries
 
-IAM owns login, token issuance and organization membership. Warehouse receives the verified actor and organization through an application port; request bodies cannot choose them. The development identity adapter is restricted to Development and lives in Warehouse infrastructure.
+The implemented IAM context owns login, token issuance and organization membership. Warehouse receives the verified actor and organization through its existing application port; request bodies cannot choose them. Authentication infrastructure lives in IAM and rejects disabled accounts even if their token has not expired. The old development identity adapter has been removed.
 
 Sales uses the ACL availability/issue contract rather than Warehouse repositories. The stock issue and Warehouse journal are atomic within Warehouse; completing a sale across contexts still needs coordination. Dispatch must not deduct the same sale again.
 
-The frontend's accepted functional source is preserved. The existing landing opens `inventory.html`; IAM, Sales integration and cloud deployment remain separate work. The corrected backend migration uses integer product IDs and is intended for a fresh database, preserving the earlier local prototype database.
+The inventory operations are preserved. The existing landing opens `inventory.html`; its router now includes IAM screens and requires a real session for inventory. Sales integration and cloud deployment remain separate work. The corrected Warehouse initial migration uses integer product IDs and is intended for a fresh database, preserving the earlier local prototype database. IAM adds its own schema and migration history to the corrected database, without changing Warehouse tables or Shared.
 
 ## Delivery validation
 

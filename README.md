@@ -1,6 +1,6 @@
-# AI-ToDu Warehouse Platform
+# AI-ToDu Platform
 
-Inventory services for Sprint 2, using C# 14, ASP.NET Core 10, Entity Framework Core and PostgreSQL. The solution follows the backend folder conventions in the supplied Learning Center Platform guides.
+IAM and inventory services for Sprint 2, using C# 14, ASP.NET Core 10, Entity Framework Core and PostgreSQL. The solution follows the backend folder conventions in the supplied Learning Center Platform guides and preserves the original Shared implementations.
 
 ## Open the projects
 
@@ -10,19 +10,24 @@ Inventory services for Sprint 2, using C# 14, ASP.NET Core 10, Entity Framework 
 
 ## Start locally
 
-Create an empty PostgreSQL database for development. Configure its connection string and launch the API. Example for PowerShell; replace the connection details with your local database:
+Create an empty PostgreSQL database for development, or use the existing corrected Warehouse database. Configure a random signing secret locally (at least 32 characters; never commit its value):
+
+```powershell
+dotnet user-secrets set "Authentication:SigningKey" "YOUR_RANDOM_SECRET_AT_LEAST_32_CHARACTERS" --project AiToDu.Platform
+```
+
+On the original development computer this secret has already been configured outside the repository. Configure the connection string and launch the API. Example for PowerShell; replace the connection details with your local database:
 
 ```powershell
 $env:ASPNETCORE_ENVIRONMENT = 'Development'
 $env:ConnectionStrings__DefaultConnection = 'Host=localhost;Port=5432;Database=ai_todu_shared;Username=postgres;Password=YOUR_LOCAL_PASSWORD'
 $env:Database__MigrateOnStartup = 'true'
-$env:Warehouse__AllowDevelopmentIdentity = 'true'
 dotnet run --project AiToDu.Platform --no-launch-profile --urls http://localhost:5080
 ```
 
-`AllowDevelopmentIdentity` explicitly enables a fixed local demonstration identity. It works only in the Development environment. Its organization is `11111111-1111-4111-8111-111111111111`; it has warehouse-operator permissions. The interface shows a banner whenever this identity is in use. This is a development integration aid, not the project's sign-in implementation.
+Open the frontend's `inventory.html#/sign-up` to create your organization and administrator, then sign in. The owner can register warehouse operators and sales clerks under **Users**. Data previously entered with the old demonstration organization stays in that organization; new accounts receive their own organization and inventory.
 
-For real IAM integration, leave that setting false and configure:
+For hosting, configure secrets and token validation using environment variables:
 
 ```text
 Authentication__SigningKey=<at least 32 characters, supplied as an environment secret>
@@ -30,7 +35,7 @@ Authentication__Issuer=ai-todu
 Authentication__Audience=ai-todu-webapp
 ```
 
-JWTs use HS256 and must carry `sub` (actor UUID), `organization_id` (organization UUID), `role`, issuer, audience and expiration. `BUSINESS_OWNER` and `WAREHOUSE_OPERATOR` can manage inventory. `SALES_CLERK` can read it. Organization and actor are taken from the verified identity, never from request bodies. The production host rejects missing signing-key configuration and ignores demonstration identity even if its flag is true. Use HTTPS at the hosting edge.
+JWTs use HS256 and carry `sub` (user public UUID), `organization_id` (organization UUID), `role`, issuer, audience and expiration. Tokens last 60 minutes. Every protected request also checks that the account still exists and is active. `BUSINESS_OWNER` and `WAREHOUSE_OPERATOR` can manage inventory. `SALES_CLERK` can read it. Organization and actor are taken from the verified identity, never from request bodies. The host requires a signing key in every environment. The former demonstration authentication adapter was removed. Use HTTPS at the hosting edge.
 
 Interactive OpenAPI documentation: `http://localhost:5080/scalar/v1`.
 OpenAPI contract: `http://localhost:5080/openapi/v1.json`.
@@ -40,6 +45,7 @@ For a controlled deployment, apply migrations separately rather than automatical
 
 ```powershell
 dotnet ef database update --project AiToDu.Platform --context WarehouseDbContext
+dotnet ef database update --project AiToDu.Platform --context IamDbContext
 ```
 
 The business calendar defaults to `America/Lima`. Override `Warehouse__TimeZone` if the deployment uses another business timezone. Audit timestamps are persisted in UTC.
@@ -48,6 +54,12 @@ The business calendar defaults to `America/Lima`. Override `Warehouse__TimeZone`
 
 ```text
 AiToDu.Platform/
+  Iam/
+    Domain/{Model,Repositories}/
+    Application/{CommandServices,QueryServices,Internal,Model,Exceptions}/
+    Infrastructure/{Hashing,Tokens,Identity,Persistence}/
+    Interfaces/Rest/{Resources,Transform}/
+    Resources/
   Warehouse/
     Domain/
       Model/{Aggregates,Entities,ValueObjects,Commands,Queries,Events,Errors}/
@@ -83,6 +95,18 @@ Product IDs in API routes/resources are integers; lot and operation IDs remain U
 
 ## API operations
 
+IAM endpoints:
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| POST | `/api/v1/authentication/sign-up` | Create a new organization owner. |
+| POST | `/api/v1/authentication/sign-in` | Authenticate and issue a signed token. |
+| GET | `/api/v1/authentication/me` | Retrieve the authenticated account. |
+| GET / POST | `/api/v1/users` | Owner lists or registers users in their organization. |
+| PATCH | `/api/v1/users/{id}/status` | Owner enables/disables a user in their organization. |
+
+See [IAM behavior and manual walkthrough](docs/iam-sprint-2.md) for payloads and security boundaries.
+
 | Method | Route | Purpose |
 | --- | --- | --- |
 | GET | `/api/v1/warehouse/session` | Verified identity and inventory permissions. |
@@ -116,7 +140,7 @@ Stock precision is three decimal places; prices have two. Negative inputs are re
 
 `IWarehouseContextFacade` exposes primitive identifiers and availability/issue operations; another context must not reference Warehouse entities or repositories. The issue operation has its own Sales policy: an authenticated sales clerk or business owner may issue through that internal use case without receiving general warehouse-adjustment permissions. It has no general HTTP write endpoint. The issue operation is idempotent by its operation reference. It commits a **Warehouse transaction**; it does not make a Sales transaction atomic across contexts. Sales should coordinate its own state and reliable integration events/compensation instead of updating stock from the browser before saving a sale. Do not deduct the same sale again at dispatch.
 
-Authentication/token issuance belongs to IAM and is not implemented by this inventory module. The frontend reads a JWT from `aitodu_token` in session/local storage; agree the final storage and claims contract with IAM. There is no production bypass.
+Authentication/token issuance belongs to the implemented IAM context. The frontend reads its JWT from `aitodu_token` in session storage, validates the restored session through `/authentication/me`, and clears inventory snapshots when the account changes. There is no development or production authentication bypass.
 
 ## Build and event handling
 

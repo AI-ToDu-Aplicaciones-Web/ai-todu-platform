@@ -1,34 +1,41 @@
-# Warehouse DDD decisions
+# Warehouse DDD and reuse of the backend guide
 
-## Reference alignment
+## Shared comes from the supplied guide
 
-The supplied `learning-center-platform-guide.md` and study guide provide the backend conventions: bounded context first; `Domain/Model` for aggregates, value objects, commands, queries, events and errors; repository contracts in Domain; command/query contracts and implementations in Application; EF Core only in Infrastructure; REST resources and assemblers in Interfaces. The frontend follows `learning-center-guide.md`: `domain/model`, `application`, `infrastructure`, `presentation/views`, context routes and assemblers.
+The authoritative backend reference is `learning-center-platform-guide.md`. All 26 C# files in its Shared Bounded Context section are included under `Shared/`, with only `Acme.Center.Platform` changed to `AiToDu.Platform`. No Warehouse-specific class is added to Shared. The resource marker classes and English/Spanish localization resources accompany them. `shared-guide-origin.json` records the original C# block locations and SHA-256 hashes after namespace substitution and LF normalization.
 
-## Aggregate boundary and rules
+This includes the aggregate and identity contracts, `Error`, `Result`, generic repository and Unit of Work, EF context and converters, auditing and event interceptors, Cortex interfaces and command behaviors, REST ProblemDetails factory, exception handler, routing conventions and OpenAPI transformer. The host registers these components; the direct command/query services use the guide's service contracts and Unit of Work.
 
-- `InventoryItem` owns `StockLot`, `InventoryMovement`, `StockCount`, `InventoryReturn` and `InventoryOperation`. Every stock mutation goes through its methods.
-- Aggregate and foreign identity references use value objects. SKU, lot code, location, reason and quantity validate their own values. Collections are exposed read-only and child mutations are internal.
-- Physical stock is the sum of lot quantities. Available stock excludes quarantined/expired lots on the business calendar date. There is no second editable stock total that can diverge from its lots.
-- Counts apply only to the expected recorded quantity. A mismatch requires recount/review rather than silently overwriting a newer balance.
-- Rejected returns do not increase stock. Quarantined returns have a separate destination lot. The returned sale reference is an external reference, not a foreign navigation to a Sales aggregate.
-- Reasons and verified actors are recorded for quantity changes. Operation signatures additionally retain the details of quarantine/location commands; domain-event records retain actor, operation and time.
+Warehouse extends the unchanged Shared `AppDbContext` through `WarehouseDbContext`. The derived context supplies only Warehouse mappings, tenant filtering and translation of persistence conflicts. Migrations reside in Warehouse infrastructure. Product identity uses `IEntityId<int>` to match the original generic repository contract; lot identities use `IEntityId<Guid>`. Actor and organization identities belong to Warehouse rather than modifying Shared.
 
-## Dependencies
+## Aggregate boundary
 
-Domain uses only the BCL and Shared Domain. It has no EF, ASP.NET, JSON or Vue dependencies. Application services orchestrate repositories, identity and clock ports and the Unit of Work. Controllers assemble resource/command data and HTTP results; they do not change balances. Infrastructure implements persistence/identity/clock ports. `Application/Acl` implements the published `Interfaces/Acl` contract following the supplied guide.
+`InventoryItem` owns `StockLot`, `InventoryMovement`, `StockCount`, `InventoryReturn` and `InventoryOperation`. Every stock mutation goes through the aggregate. Child entities have no independent repository or public balance mutation API. Collections are exposed read-only. SKU, quantity, location, lot code and reason validate their own values.
 
-The host wires dependencies. The guide uses a mediator adapter for event delivery; here domain events have a framework-free contract and are persisted in an outbox with the aggregate. This keeps domain invariants independent of the mediator and prevents claiming reliable cross-context delivery before a dispatcher exists.
+Physical stock is the sum of the lots. Available stock excludes quarantined or expired lots using the business date. Physical counts require the expected recorded balance. Rejected returns add no stock; quarantined returns create a separate quarantined lot. Sales references are external values, without navigation to another context's aggregate.
 
-## Transaction and concurrency
+## Dependencies and folders
 
-EF Core maps owned entities in Warehouse tables. A unique organization/SKU index closes the race left by an application-only duplicate check. The aggregate version is an optimistic-concurrency token. One SaveChanges transaction includes the root, owned state and outbox; a losing concurrent command rolls back its movements. Provider exceptions are translated into application-level conflicts.
+Warehouse follows `Domain/Model`, `Domain/Repositories`, `Application/{CommandServices,QueryServices,Internal,OutboundServices,Acl}`, `Infrastructure` and `Interfaces/{Rest,Acl}`. The domain uses the BCL and Shared Domain contracts. The original Shared `IEvent` inherits Cortex's notification contract, exactly as in the guide. EF Core mappings and identity adapters stay in Infrastructure; REST resources and assemblers stay in Interfaces.
 
-`operationId` plus a canonical signature prevents an uncertain request from applying twice. A matching replay does not create movements, increment version or add events. A changed payload with the same operation ID is a conflict.
+Application orchestrates the aggregate, repository, identity/clock ports and the original `IUnitOfWork`. Controllers assemble resources and delegate. `Application/Acl` implements the published `Interfaces/Acl` contract. No inventory balance is computed or saved by a controller.
 
-The aggregate currently loads its audit collections with its state. This favors a clear, testable Sprint 2 boundary. At larger history volumes, introduce bounded read models and an archival/operation-retention policy while preserving the same mutation invariants; do not discard idempotency records arbitrarily.
+## Persistence, concurrency and events
+
+EF Core saves the aggregate and its owned state in a Warehouse transaction. A unique organization/SKU index protects duplicate registration. An optimistic-concurrency version rejects stale writes. An operation ID and payload signature prevent a retry from applying a stock change twice. Database errors are translated outside Shared into Warehouse application conflicts.
+
+The exact guide `AggregateRoot` stores deferred event factories. After saving, the original `DispatchDomainEventsInterceptor` evaluates the events, clears them from the aggregates and publishes them through Cortex. The Warehouse handler currently logs inventory events. There is no persistent outbox in this implementation and no guarantee of durable delivery to Sales or Logistics. A later integration must address that explicitly without claiming the guide's interceptor provides it.
+
+Audit history currently loads with the aggregate. Larger histories will need read models and an explicit retention strategy that preserves retry guarantees.
 
 ## Integration boundaries
 
-IAM owns authentication and tenant membership. Warehouse receives a verified organization/actor through an application port. It never trusts organization identifiers from request JSON. Sales/Logistics use the ACL and published events; they do not reach into Warehouse persistence. A stock issue and its Warehouse journal are atomic, while Sales/Inventory cross-context workflow needs its own coordination.
+IAM owns login, token issuance and organization membership. Warehouse receives the verified actor and organization through an application port; request bodies cannot choose them. The development identity adapter is restricted to Development and lives in Warehouse infrastructure.
 
-The older unused frontend `inventory/` model/service were removed after confirming there were no callers. `warehouse/` is the inventory implementation. The existing landing is preserved; its warehouse CTA now opens the new inventory entry. Other contexts remain outside this change.
+Sales uses the ACL availability/issue contract rather than Warehouse repositories. The stock issue and Warehouse journal are atomic within Warehouse; completing a sale across contexts still needs coordination. Dispatch must not deduct the same sale again.
+
+The frontend's accepted functional source is preserved. The existing landing opens `inventory.html`; IAM, Sales integration and cloud deployment remain separate work. The corrected backend migration uses integer product IDs and is intended for a fresh database, preserving the earlier local prototype database.
+
+## Delivery validation
+
+The solution is compiled with `dotnet build`. Test projects, scripts and CI test steps were removed at the user's request. The source provenance comparison verifies literal reuse of Shared after the namespace change; it is not a behavioral test suite.

@@ -1,6 +1,5 @@
 using AiToDu.Platform.Warehouse.Domain.Model.ValueObjects;
 using AiToDu.Platform.Warehouse.Domain.Model.Errors;
-using AiToDu.Platform.Shared.Domain.Model.ValueObjects;
 
 namespace AiToDu.Platform.Warehouse.Domain.Model.Entities;
 

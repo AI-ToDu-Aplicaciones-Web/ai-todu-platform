@@ -1,4 +1,4 @@
-using AiToDu.Platform.Shared.Domain.Model.ValueObjects;
+using AiToDu.Platform.Warehouse.Domain.Model.ValueObjects;
 namespace AiToDu.Platform.Warehouse.Application.OutboundServices;
 
 /// <summary>Identity port supplied by the host/IAM adapter; never populated from request bodies.</summary>

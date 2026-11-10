@@ -9,11 +9,11 @@ namespace AiToDu.Platform.Warehouse.Application.Acl;
 
 public sealed class WarehouseContextFacade(IInventoryItemQueryService queries, IInventoryItemCommandService commands, IWarehouseClock clock) : IWarehouseContextFacade
 {
-    public async Task<decimal?> FetchAvailableQuantity(Guid inventoryItemId, CancellationToken ct)
+    public async Task<decimal?> FetchAvailableQuantity(int inventoryItemId, CancellationToken ct)
     {
         var item = await queries.Handle(new GetInventoryItemByIdQuery(new InventoryItemId(inventoryItemId)), ct);
         return item?.AvailableQuantityOn(DateOnly.FromDateTime(clock.GetCurrentTime().DateTime));
     }
-    public async Task<bool> IssueForSale(Guid inventoryItemId, Guid lotId, Guid saleOperationId, long expectedVersion, decimal quantity, string saleReference, CancellationToken ct) =>
+    public async Task<bool> IssueForSale(int inventoryItemId, Guid lotId, Guid saleOperationId, long expectedVersion, decimal quantity, string saleReference, CancellationToken ct) =>
         (await commands.Handle(new IssueStockForSaleCommand(new InventoryItemId(inventoryItemId), saleOperationId, expectedVersion, new StockLotId(lotId), quantity, saleReference), ct)).IsSuccess;
 }

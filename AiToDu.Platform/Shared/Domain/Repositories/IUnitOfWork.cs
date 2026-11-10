@@ -1,3 +1,9 @@
 namespace AiToDu.Platform.Shared.Domain.Repositories;
 
-public interface IUnitOfWork { Task CompleteAsync(CancellationToken cancellationToken = default); }
+/// <summary>
+///     Unit of work interface for all repositories
+/// </summary>
+public interface IUnitOfWork
+{
+    Task CompleteAsync(CancellationToken cancellationToken = default);
+}

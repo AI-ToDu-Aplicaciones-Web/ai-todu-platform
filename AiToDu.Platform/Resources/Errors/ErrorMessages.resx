@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+<data name="OperationCancelled" xml:space="preserve"><value>The operation was cancelled.</value></data>
+<data name="GenericError" xml:space="preserve"><value>An unexpected error occurred.</value></data>
+</root>

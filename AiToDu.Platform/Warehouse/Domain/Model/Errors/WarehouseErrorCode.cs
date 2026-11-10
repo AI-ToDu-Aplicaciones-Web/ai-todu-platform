@@ -3,6 +3,13 @@ namespace AiToDu.Platform.Warehouse.Domain.Model.Errors;
 /// <summary>Typed catalog of inventory business rejections.</summary>
 public enum WarehouseErrorCode
 {
+    ItemNotFound,
+    DuplicateSku,
+    Forbidden,
+    PersistenceConflict,
+    DatabaseError,
+    InternalServerError,
+    OperationCancelled,
     CountOutdated,
     ExpiredReceipt,
     InsufficientStock,

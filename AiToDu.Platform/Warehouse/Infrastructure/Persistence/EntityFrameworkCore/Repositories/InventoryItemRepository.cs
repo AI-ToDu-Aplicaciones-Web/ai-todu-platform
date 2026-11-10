@@ -1,6 +1,5 @@
 using AiToDu.Platform.Warehouse.Domain.Model.ValueObjects;
 using AiToDu.Platform.Warehouse.Domain.Model.Errors;
-using AiToDu.Platform.Shared.Domain.Model.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using AiToDu.Platform.Warehouse.Domain.Model.Aggregates;
 using AiToDu.Platform.Warehouse.Domain.Repositories;
@@ -14,14 +13,14 @@ public sealed class InventoryItemRepository(AppDbContext context) : BaseReposito
         .Include(x => x.Lots).Include(x => x.Movements).Include(x => x.Counts).Include(x => x.Returns).Include(x => x.Operations).AsSplitQuery();
     public Task<InventoryItem?> FindAsync(OrganizationId organizationId, InventoryItemId itemId, bool tracking, CancellationToken ct)
     {
-        var query = Context.InventoryItems.Where(x => x.OrganizationId == organizationId && x.Id == itemId);
+        var query = Context.Set<InventoryItem>().Where(x => x.OrganizationId == organizationId && x.Id == itemId);
         if (!tracking) query = query.AsNoTracking();
         return Complete(query).SingleOrDefaultAsync(ct);
     }
-    public Task<bool> SkuExistsAsync(OrganizationId organizationId, Sku sku, CancellationToken ct) => Context.InventoryItems.AnyAsync(x => x.OrganizationId == organizationId && x.Sku == sku, ct);
+    public Task<bool> SkuExistsAsync(OrganizationId organizationId, Sku sku, CancellationToken ct) => Context.Set<InventoryItem>().AnyAsync(x => x.OrganizationId == organizationId && x.Sku == sku, ct);
     public async Task<(IReadOnlyList<InventoryItem> Items, int Total)> SearchAsync(OrganizationId organizationId, string? search, int page, int pageSize, CancellationToken ct)
     {
-        var query = Context.InventoryItems.AsNoTracking().Where(x => x.OrganizationId == organizationId);
+        var query = Context.Set<InventoryItem>().AsNoTracking().Where(x => x.OrganizationId == organizationId);
         if (!string.IsNullOrWhiteSpace(search))
         {
             var name = search.Trim().ToLowerInvariant();

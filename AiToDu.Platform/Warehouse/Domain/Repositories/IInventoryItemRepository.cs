@@ -1,6 +1,5 @@
 using AiToDu.Platform.Warehouse.Domain.Model.ValueObjects;
 using AiToDu.Platform.Warehouse.Domain.Model.Errors;
-using AiToDu.Platform.Shared.Domain.Model.ValueObjects;
 using AiToDu.Platform.Shared.Domain.Repositories;
 using AiToDu.Platform.Warehouse.Domain.Model.Aggregates;
 

@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using AiToDu.Platform.Warehouse.Application.OutboundServices;
-using AiToDu.Platform.Shared.Domain.Model.ValueObjects;
+using AiToDu.Platform.Warehouse.Domain.Model.ValueObjects;
 namespace AiToDu.Platform.Warehouse.Infrastructure.Identity;
 
 public sealed class HttpCurrentWarehouseActor(IHttpContextAccessor accessor) : ICurrentWarehouseActor

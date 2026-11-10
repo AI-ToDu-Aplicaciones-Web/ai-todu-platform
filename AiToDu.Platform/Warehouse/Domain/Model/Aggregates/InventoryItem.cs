@@ -1,6 +1,6 @@
+using AiToDu.Platform.Shared.Domain.Model.Entities;
 using AiToDu.Platform.Warehouse.Domain.Model.ValueObjects;
 using AiToDu.Platform.Warehouse.Domain.Model.Errors;
-using AiToDu.Platform.Shared.Domain.Model.ValueObjects;
 using AiToDu.Platform.Shared.Domain.Model.Aggregates;
 using AiToDu.Platform.Warehouse.Domain.Model.Entities;
 using AiToDu.Platform.Warehouse.Domain.Model.Events;
@@ -8,7 +8,7 @@ using AiToDu.Platform.Warehouse.Domain.Model.Events;
 namespace AiToDu.Platform.Warehouse.Domain.Model.Aggregates;
 
 /// <summary>Consistency boundary for a product, its lots, counts, returns and movement ledger.</summary>
-public sealed class InventoryItem : AggregateRoot
+public sealed class InventoryItem : AggregateRoot, IAuditableEntity
 {
     private readonly List<StockLot> _lots = [];
     private readonly List<InventoryMovement> _movements = [];
@@ -16,6 +16,8 @@ public sealed class InventoryItem : AggregateRoot
     private readonly List<InventoryReturn> _returns = [];
     private readonly List<InventoryOperation> _operations = [];
     public InventoryItemId Id { get; private set; }
+    public DateTimeOffset? CreatedAt { get; set; }
+    public DateTimeOffset? UpdatedAt { get; set; }
     public OrganizationId OrganizationId { get; private set; }
     public Sku Sku { get; private set; } = null!;
     public string Name { get; private set; } = "";
@@ -34,13 +36,13 @@ public sealed class InventoryItem : AggregateRoot
     public InventoryItem(InventoryItemId id, OrganizationId organizationId, Sku sku, string name,
         string category, StockQuantity minimumStock, decimal unitPrice, ActorId actorId, DateTimeOffset now)
     {
-        if (id.Value == Guid.Empty || organizationId.Value == Guid.Empty || actorId.Value == Guid.Empty) throw new WarehouseDomainException(WarehouseErrorCode.InvalidIdentifier);
+        if (id.Value < 0 || organizationId.Value == Guid.Empty || actorId.Value == Guid.Empty) throw new WarehouseDomainException(WarehouseErrorCode.InvalidIdentifier);
         if (string.IsNullOrWhiteSpace(name) || name.Trim().Length > 160) throw new WarehouseDomainException(WarehouseErrorCode.InvalidName);
         if (string.IsNullOrWhiteSpace(category) || category.Trim().Length > 100) throw new WarehouseDomainException(WarehouseErrorCode.InvalidCategory);
         if (unitPrice < 0 || unitPrice > 999999999999m || decimal.Round(unitPrice, 2) != unitPrice) throw new WarehouseDomainException(WarehouseErrorCode.InvalidPrice);
         Id = id; OrganizationId = organizationId; Sku = sku; Name = name.Trim(); Category = category.Trim();
         MinimumStock = minimumStock; UnitPrice = unitPrice; Version = 1;
-        AddDomainEvent(new InventoryChangedEvent(Guid.NewGuid(), organizationId, id, Guid.NewGuid(), "InventoryItemRegistered", actorId, now));
+        AddDomainEvent(() => new InventoryChangedEvent(Guid.NewGuid(), OrganizationId, Id, Guid.NewGuid(), "InventoryItemRegistered", actorId, now.ToUniversalTime()));
     }
     public void ReceiveLot(Guid operationId, long expectedVersion, LotCode code, StorageLocation location,
         DateOnly? expiresOn, StockQuantity quantity, ActorId actorId, DateTimeOffset now)
@@ -139,7 +141,7 @@ public sealed class InventoryItem : AggregateRoot
         _operations.Add(new InventoryOperation(operationId, signature));
         var separator = signature.IndexOf(':');
         var changeType = signature.Substring(separator + 1, int.Parse(signature[..separator], System.Globalization.CultureInfo.InvariantCulture));
-        AddDomainEvent(new InventoryChangedEvent(Guid.NewGuid(), OrganizationId, Id, operationId, changeType, actorId, now.ToUniversalTime()));
+        AddDomainEvent(() => new InventoryChangedEvent(Guid.NewGuid(), OrganizationId, Id, operationId, changeType, actorId, now.ToUniversalTime()));
     }
     private static string Signature(params object?[] values) => string.Concat(values.Select(value =>
     {

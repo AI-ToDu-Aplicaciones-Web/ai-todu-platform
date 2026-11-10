@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+<data name="GenericError" xml:space="preserve"><value>Ocurrió un error al procesar su solicitud.</value></data>
+<data name="InternalServerError" xml:space="preserve"><value>Error Interno del Servidor</value></data>
+</root>

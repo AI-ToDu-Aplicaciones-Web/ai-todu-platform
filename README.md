@@ -6,7 +6,7 @@ Inventory services for Sprint 2, using C# 14, ASP.NET Core 10, Entity Framework 
 
 - Open `ai-todu-platform.sln` in Rider or Visual Studio.
 - Restore dependencies with `dotnet restore`.
-- Run the rules and architecture checks with `dotnet test`.
+- Compile the solution with `dotnet build`.
 
 ## Start locally
 
@@ -14,7 +14,7 @@ Create an empty PostgreSQL database for development. Configure its connection st
 
 ```powershell
 $env:ASPNETCORE_ENVIRONMENT = 'Development'
-$env:ConnectionStrings__DefaultConnection = 'Host=localhost;Port=5432;Database=ai_todu;Username=postgres;Password=YOUR_LOCAL_PASSWORD'
+$env:ConnectionStrings__DefaultConnection = 'Host=localhost;Port=5432;Database=ai_todu_shared;Username=postgres;Password=YOUR_LOCAL_PASSWORD'
 $env:Database__MigrateOnStartup = 'true'
 $env:Warehouse__AllowDevelopmentIdentity = 'true'
 dotnet run --project AiToDu.Platform --no-launch-profile --urls http://localhost:5080
@@ -39,7 +39,7 @@ Database readiness: `http://localhost:5080/api/v1/health`.
 For a controlled deployment, apply migrations separately rather than automatically:
 
 ```powershell
-dotnet ef database update --project AiToDu.Platform
+dotnet ef database update --project AiToDu.Platform --context WarehouseDbContext
 ```
 
 The business calendar defaults to `America/Lima`. Override `Warehouse__TimeZone` if the deployment uses another business timezone. Audit timestamps are persisted in UTC.
@@ -59,7 +59,7 @@ AiToDu.Platform/
       OutboundServices/
       Acl/
     Infrastructure/
-      Persistence/EntityFrameworkCore/{Configuration/Extensions,Repositories}/
+      Persistence/EntityFrameworkCore/{Configuration/Extensions,Repositories,Migrations}/
       Identity/
     Interfaces/
       Rest/{Resources,Transform}/
@@ -67,11 +67,19 @@ AiToDu.Platform/
     Resources/
   Shared/
     Domain/{Model,Repositories}/
-    Application/{Model,Exceptions}/
-    Infrastructure/{Persistence,Security,Interfaces}/
+    Application/{Model,Internal/EventHandlers}/
+    Infrastructure/{Persistence,Mediator,Pipeline,Interfaces}/
+    Interfaces/Rest/ProblemDetails/
+  Resources/{Shared,Errors}/
 ```
 
+All 26 C# files under `Shared/` are reused from the Shared Bounded Context section of the supplied `learning-center-platform-guide.md`. Their implementations are preserved; only the `Acme.Center.Platform` namespace changes to `AiToDu.Platform`. The guide's two localization marker classes and four resource files are also included. [Source locations and normalized hashes](docs/shared-guide-origin.json) identify the reused C# files.
+
+Warehouse adapts to those contracts: `InventoryItemId` wraps an integer, repositories extend the original `BaseRepository`, services use the original `Result` and `IUnitOfWork`, and events use the guide's Cortex contracts and interceptors. `WarehouseDbContext` extends the unchanged shared `AppDbContext` to supply Warehouse mappings and organization isolation. Identity adapters and domain-specific errors stay inside Warehouse.
+
 `InventoryItem` is the consistency boundary. Lots, movements, physical counts, customer returns and processed operations are owned entities. They have no independent repositories or public mutators. Read the [architecture decisions](docs/warehouse-ddd.md) before changing this boundary.
+
+Product IDs in API routes/resources are integers; lot and operation IDs remain UUIDs. This corrected initial migration targets a fresh database. An earlier local prototype used UUID product keys and must not share this initial migration history; preserve any existing data until a separate data migration is designed.
 
 ## API operations
 
@@ -102,7 +110,7 @@ Receipt body, after using the version returned by registration:
 
 All stock-changing commands require a new `operationId` and the latest `expectedVersion`. Reuse the *same operation ID and payload* when retrying an uncertain request. An identical replay has no additional effect, even when its original expected version is old. Reusing an ID with changed data is rejected. A stale write returns 409; reload the product and review the intended operation before trying again. A creation retry is protected against duplicate SKU but is not treated as an idempotent success.
 
-Stock precision is three decimal places; prices have two. Negative inputs are rejected rather than clamped to zero. Only an Adjustment uses a signed quantity. Every accepted change commits its aggregate and integration-event record together. Expired and quarantined lots remain in physical stock but are excluded from available stock. Waste may remove quarantined or expired merchandise. A returned quantity classified as Quarantine receives a separate quarantined lot so that existing usable stock is not isolated accidentally.
+Stock precision is three decimal places; prices have two. Negative inputs are rejected rather than clamped to zero. Only an Adjustment uses a signed quantity. Every accepted change saves its aggregate and owned records together. Expired and quarantined lots remain in physical stock but are excluded from available stock. Waste may remove quarantined or expired merchandise. A returned quantity classified as Quarantine receives a separate quarantined lot so that existing usable stock is not isolated accidentally.
 
 ## Integrating Sales and IAM
 
@@ -110,17 +118,13 @@ Stock precision is three decimal places; prices have two. Negative inputs are re
 
 Authentication/token issuance belongs to IAM and is not implemented by this inventory module. The frontend reads a JWT from `aitodu_token` in session/local storage; agree the final storage and claims contract with IAM. There is no production bypass.
 
-## Verification
-
-`dotnet test` covers inventory invariants, retry semantics, stale versions, count baselines, expiry/business dates, quarantine, return classification and encapsulation.
-
-For a running test API and **disposable** database, with a test signing key matching the API:
+## Build and event handling
 
 ```powershell
-$env:WAREHOUSE_TEST_SIGNING_KEY = '<test-only signing key>'
-python tests/warehouse_api_smoke.py
+dotnet restore ai-todu-platform.sln
+dotnet build ai-todu-platform.sln --no-restore
 ```
 
-The integration script creates isolated test organizations/products, checks permissions and tenant separation, persists and reloads stock, tests concurrent deductions and verifies OpenAPI. It does not delete existing business records. Do not run it against production.
+This delivery contains no test project or test scripts. Its CI compiles the solution.
 
-Domain events are committed to `shared.outbox_messages`. A background delivery worker is a future integration responsibility; this module does not claim that events have already been delivered to other contexts.
+The guide's `DispatchDomainEventsInterceptor` publishes events through Cortex after EF Core saves changes; `InventoryChangedEventHandler` currently logs the event. The original Shared implementation has no persistent outbox or durable delivery guarantee. Reliable delivery to other contexts remains an integration task.

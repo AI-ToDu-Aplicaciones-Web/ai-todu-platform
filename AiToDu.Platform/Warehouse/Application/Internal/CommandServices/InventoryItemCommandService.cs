@@ -3,9 +3,8 @@ using AiToDu.Platform.Warehouse.Domain.Model.Aggregates;
 using AiToDu.Platform.Warehouse.Domain.Model.Commands;
 using AiToDu.Platform.Warehouse.Domain.Model.ValueObjects;
 using AiToDu.Platform.Warehouse.Domain.Model.Errors;
-using AiToDu.Platform.Shared.Domain.Model.ValueObjects;
 
-using AiToDu.Platform.Shared.Application.Exceptions;
+using AiToDu.Platform.Warehouse.Application.Exceptions;
 using AiToDu.Platform.Shared.Domain.Repositories;
 using AiToDu.Platform.Warehouse.Application.CommandServices;
 using AiToDu.Platform.Warehouse.Application.OutboundServices;
@@ -18,38 +17,38 @@ public sealed class InventoryItemCommandService(IInventoryItemRepository reposit
 {
     public async Task<Result<InventoryItem>> Handle(CreateInventoryItemCommand c, CancellationToken ct)
     {
-        if (!actor.CanManageInventory) return Result<InventoryItem>.Failure("Forbidden", ErrorKind.Forbidden);
+        if (!actor.CanManageInventory) return Rejected(WarehouseErrorCode.Forbidden);
         try
         {
             var sku = new Sku(c.Sku);
-            if (await repository.SkuExistsAsync(actor.OrganizationId, sku, ct)) return Result<InventoryItem>.Failure("DuplicateSku", ErrorKind.Conflict);
+            if (await repository.SkuExistsAsync(actor.OrganizationId, sku, ct)) return Rejected(WarehouseErrorCode.DuplicateSku);
             var item = new InventoryItem(InventoryItemId.New(), actor.OrganizationId, sku, c.Name, c.Category, new StockQuantity(c.MinimumStock), c.UnitPrice, actor.ActorId, clock.GetCurrentTime());
             await repository.AddAsync(item, ct);
             await unitOfWork.CompleteAsync(ct);
             return Result<InventoryItem>.Success(item);
         }
         catch (WarehouseDomainException e) { return Rejected(e); }
-        catch (PersistenceConflictException e) { return Result<InventoryItem>.Failure(e.Code, ErrorKind.Conflict); }
+        catch (WarehousePersistenceConflictException e) { return Rejected(e.Code); }
     }
     public Task<Result<InventoryItem>> Handle(IssueStockForSaleCommand c, CancellationToken ct) =>
         Execute(c.ItemId, item => item.RecordMovement(c.OperationId, c.ExpectedVersion, c.LotId, MovementType.Issue, c.Quantity, new MovementReason(c.SaleReference), actor.ActorId, clock.GetCurrentTime()), ct, true);
     private async Task<Result<InventoryItem>> Execute(InventoryItemId itemId, Action<InventoryItem> action, CancellationToken ct, bool salesIssue = false)
     {
-        if (!(salesIssue ? actor.CanRecordSales : actor.CanManageInventory)) return Result<InventoryItem>.Failure("Forbidden", ErrorKind.Forbidden);
+        if (!(salesIssue ? actor.CanRecordSales : actor.CanManageInventory)) return Rejected(WarehouseErrorCode.Forbidden);
         try
         {
             var item = await repository.FindAsync(actor.OrganizationId, itemId, true, ct);
-            if (item is null) return Result<InventoryItem>.Failure("ItemNotFound", ErrorKind.NotFound);
+            if (item is null) return Rejected(WarehouseErrorCode.ItemNotFound);
             var previousVersion = item.Version;
             action(item);
             if (item.Version != previousVersion) await unitOfWork.CompleteAsync(ct);
             return Result<InventoryItem>.Success(item);
         }
         catch (WarehouseDomainException e) { return Rejected(e); }
-        catch (PersistenceConflictException e) { return Result<InventoryItem>.Failure(e.Code, ErrorKind.Conflict); }
+        catch (WarehousePersistenceConflictException e) { return Rejected(e.Code); }
     }
-    private static Result<InventoryItem> Rejected(WarehouseDomainException e) => Result<InventoryItem>.Failure(e.Code,
-        e.Code.EndsWith("NotFound") ? ErrorKind.NotFound : e.IsConflict ? ErrorKind.Conflict : ErrorKind.Validation);
+    private static Result<InventoryItem> Rejected(WarehouseDomainException e) => Rejected(e.ErrorCode);
+    private static Result<InventoryItem> Rejected(WarehouseErrorCode code) => Result<InventoryItem>.Failure(WarehouseErrors.From(code),code);
     public Task<Result<InventoryItem>> Handle(ReceiveStockLotCommand c, CancellationToken ct) => Execute(c.ItemId, item => item.ReceiveLot(c.OperationId, c.ExpectedVersion, new LotCode(c.LotCode), new StorageLocation(c.Location), c.ExpiresOn, new StockQuantity(c.Quantity), actor.ActorId, clock.GetCurrentTime()), ct);
     public Task<Result<InventoryItem>> Handle(RecordInventoryMovementCommand c, CancellationToken ct) => Execute(c.ItemId, item => item.RecordMovement(c.OperationId, c.ExpectedVersion, c.LotId, c.Type, c.Quantity, new MovementReason(c.Reason), actor.ActorId, clock.GetCurrentTime()), ct);
     public Task<Result<InventoryItem>> Handle(RegisterStockCountCommand c, CancellationToken ct) => Execute(c.ItemId, item => item.RegisterCount(c.OperationId, c.ExpectedVersion, c.LotId, new StockQuantity(c.ExpectedQuantity), new StockQuantity(c.CountedQuantity), new MovementReason(c.Reason), actor.ActorId, clock.GetCurrentTime()), ct);

@@ -1,0 +1,147 @@
+{
+  "source": "learning-center-platform-guide.md",
+  "namespaceChange": "Acme.Center.Platform -> AiToDu.Platform",
+  "files": [
+    {
+      "file": "Shared/Domain/Model/ValueObjects/IEntityId.cs",
+      "guideLine": 1095,
+      "sha256": "0d376152e3c1bdc78b839b7a67f6120d43b75ffae6f2d222ccbe6307cfdc6040"
+    },
+    {
+      "file": "Shared/Domain/Model/Events/IEvent.cs",
+      "guideLine": 1122,
+      "sha256": "5e07875dfd2439d81e7f1d1f3aec8e77faff303c7ea6ad317166822857dd4870"
+    },
+    {
+      "file": "Shared/Domain/Model/Aggregates/IAggregateRoot.cs",
+      "guideLine": 1150,
+      "sha256": "c176a3470a73b669cc44a378854f40fe0d8844ce4d75b317772de07588b08544"
+    },
+    {
+      "file": "Shared/Domain/Model/Aggregates/AggregateRoot.cs",
+      "guideLine": 1185,
+      "sha256": "bfde58352533d705d5026f4ce8c4b7edf5b904d07a7e7b05a5f8c69146dedcf5"
+    },
+    {
+      "file": "Shared/Domain/Model/Entities/IAuditableEntity.cs",
+      "guideLine": 1230,
+      "sha256": "4e568c717a2a991434b6dc912ef90256f53316101719eca1ed1b03aff5b47778"
+    },
+    {
+      "file": "Shared/Domain/Model/Errors/Error.cs",
+      "guideLine": 1266,
+      "sha256": "4ba8ee83282ab3f7812f9c91cd3504c233f79708d14358ea75c5e98f6e71edfb"
+    },
+    {
+      "file": "Shared/Application/Model/Result.cs",
+      "guideLine": 1311,
+      "sha256": "9c14e98700b71a881f233c0b424ae1216c4616b59a8f4d9dbf2777e9e8c7bee6"
+    },
+    {
+      "file": "Shared/Domain/Repositories/IBaseRepository.cs",
+      "guideLine": 1405,
+      "sha256": "353d6d0ca954bab2c1fa8fdcbcc40cff4aebf6dfdce70cec0860149d21f79741"
+    },
+    {
+      "file": "Shared/Domain/Repositories/IUnitOfWork.cs",
+      "guideLine": 1440,
+      "sha256": "e5b18d55fcf80e26ee1053510d44edddbd2a738b3b5fe9d1c78eabe60dd4f485"
+    },
+    {
+      "file": "Shared/Infrastructure/Persistence/EntityFrameworkCore/Configuration/AppDbContext.cs",
+      "guideLine": 1909,
+      "sha256": "ebe03ae6c0748c0d0eb49da8f5a5d4bbf001113486904e818c018265d362d97f"
+    },
+    {
+      "file": "Shared/Infrastructure/Persistence/EntityFrameworkCore/Repositories/BaseRepository.cs",
+      "guideLine": 1499,
+      "sha256": "85ea755d32d51c5a1f03839ed651982401502ace3ddfda4014158ef3cf629781"
+    },
+    {
+      "file": "Shared/Infrastructure/Persistence/EntityFrameworkCore/Repositories/UnitOfWork.cs",
+      "guideLine": 1596,
+      "sha256": "e24a3f3d40ef1f21cc88fbb9b4a7c4c72025980c7de9f5dc6fbc0504863cbb42"
+    },
+    {
+      "file": "Shared/Infrastructure/Persistence/EntityFrameworkCore/Interceptors/AuditableEntityInterceptor.cs",
+      "guideLine": 1628,
+      "sha256": "8c8bd8741d292467f99db792e197ad6d712fe3d8aa8268792af7fe9bb6d3c36e"
+    },
+    {
+      "file": "Shared/Application/Internal/EventHandlers/IEventHandler.cs",
+      "guideLine": 1684,
+      "sha256": "7c1b5d1ee0cc3b70a05e76997ad474d81f9cc27b4e0de1d67d01931eda5932f3"
+    },
+    {
+      "file": "Shared/Infrastructure/Persistence/EntityFrameworkCore/Interceptors/DispatchDomainEventsInterceptor.cs",
+      "guideLine": 1713,
+      "sha256": "0cef96a7c3220ceee509a3e75c34eb838cd4e020b14facc03ea2918e947dcf24"
+    },
+    {
+      "file": "Shared/Infrastructure/Persistence/EntityFrameworkCore/Configuration/ValueConverters/StronglyTypedIdConverter.cs",
+      "guideLine": 1782,
+      "sha256": "c2390bbac52c9b9e6e902df18ee289950f781676b8b17a77c70841c67c4f245c"
+    },
+    {
+      "file": "Shared/Infrastructure/Persistence/EntityFrameworkCore/Configuration/Extensions/StringExtensions.cs",
+      "guideLine": 1819,
+      "sha256": "53ab804be4bd5e55724517ebe0c1da11fa776d4a257737e213cdca8e9f82db2a"
+    },
+    {
+      "file": "Shared/Infrastructure/Persistence/EntityFrameworkCore/Configuration/Extensions/ModelBuilderExtensions.cs",
+      "guideLine": 1863,
+      "sha256": "ef5ecb8ef5e99023feeebec7d8c46644b6a58bcd74389caed2a5fcd7f72e227c"
+    },
+    {
+      "file": "Shared/Infrastructure/Interfaces/AspNetCore/Configuration/Extensions/StringExtensions.cs",
+      "guideLine": 1952,
+      "sha256": "a20fa8c0b1e334ee8f8f40b37796a4975ed73e93d1b7ea743e6ade001aca7623"
+    },
+    {
+      "file": "Shared/Infrastructure/Interfaces/AspNetCore/Configuration/KebabCaseRouteNamingConvention.cs",
+      "guideLine": 1980,
+      "sha256": "14577e3ad36afad91e3d17dae728d1d49c440f00ed5a85f4d6c5317adbf5fbb2"
+    },
+    {
+      "file": "Shared/Infrastructure/Mediator/Cortex/Configuration/LoggingCommandBehavior.cs",
+      "guideLine": 2027,
+      "sha256": "619f771cd4fbf64797680ba5d6d449693a1a9a0c590aacb5c8edf7b88eebf9b6"
+    },
+    {
+      "file": "Shared/Infrastructure/Mediator/Cortex/Configuration/ExceptionHandlingCommandBehavior.cs",
+      "guideLine": 2057,
+      "sha256": "7bbc9f794fea365d72a25504df4b72a1c865fa7ff1bf89274a0c47d91cc7948c"
+    },
+    {
+      "file": "Shared/Infrastructure/Mediator/Cortex/Configuration/TransactionCommandBehavior.cs",
+      "guideLine": 2103,
+      "sha256": "fe22c77c90766629e61cfbf28f9572c3b78885ab7b8fc53c79eda22449d32315"
+    },
+    {
+      "file": "Resources/Shared/CommonMessages.cs",
+      "guideLine": 2141,
+      "sha256": "9970da691a0e93a4b0bd6cde37ecb495e112af91a9d25ff9f0f9165755f6fef7"
+    },
+    {
+      "file": "Resources/Errors/ErrorMessages.cs",
+      "guideLine": 2153,
+      "sha256": "d9bf918a4ab29e85328711f78caa7e1d02c0ae4b07c612cb8d07ea1e53d1da86"
+    },
+    {
+      "file": "Shared/Interfaces/Rest/ProblemDetails/ProblemDetailsFactory.cs",
+      "guideLine": 2172,
+      "sha256": "34b60532f0354403b4d3d2963ea8dbd5e5c74bd533e8245eea849709424fab86"
+    },
+    {
+      "file": "Shared/Infrastructure/Pipeline/Middleware/Components/GlobalExceptionHandler.cs",
+      "guideLine": 2285,
+      "sha256": "3cc17f0e1606afafa54f899b7e001bb2ba697f405688d29df8cc2f1efa18540a"
+    },
+    {
+      "file": "Shared/Infrastructure/Interfaces/AspNetCore/OpenApi/BearerSecuritySchemeTransformer.cs",
+      "guideLine": 2364,
+      "sha256": "764e6d7759faddb34b51397049e1d9df437d4b6c9b4142de147bce1724e6e076"
+    }
+  ],
+  "hashNormalization": "UTF-8 text with LF line endings"
+}

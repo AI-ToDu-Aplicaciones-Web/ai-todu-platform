@@ -1,3 +1,16 @@
+using System.Threading.RateLimiting;
+using AiToDu.Platform.Iam.Application.CommandServices;
+using AiToDu.Platform.Iam.Application.Internal.CommandServices;
+using AiToDu.Platform.Iam.Application.Internal.OutboundServices;
+using AiToDu.Platform.Iam.Application.Internal.QueryServices;
+using AiToDu.Platform.Iam.Application.QueryServices;
+using AiToDu.Platform.Iam.Domain.Repositories;
+using AiToDu.Platform.Iam.Infrastructure.Hashing.BCrypt.Services;
+using AiToDu.Platform.Iam.Infrastructure.Identity;
+using AiToDu.Platform.Iam.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
+using AiToDu.Platform.Iam.Infrastructure.Persistence.EntityFrameworkCore.Repositories;
+using AiToDu.Platform.Iam.Infrastructure.Tokens.JWT.Services;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Globalization;
 using System.Text.Json.Serialization;
 using AiToDu.Platform.Resources.Errors;
@@ -63,6 +76,31 @@ builder.Services.AddScoped(typeof(ICommandPipelineBehavior<>), typeof(ExceptionH
 builder.Services.AddScoped(typeof(ICommandPipelineBehavior<>), typeof(TransactionCommandBehavior<>));
 builder.Services.AddCortexMediator([typeof(Program)]);
 
+builder.Services.AddDbContext<IamDbContext>(options =>
+{
+    var connection = builder.Configuration.GetConnectionString("DefaultConnection") ??
+        (builder.Environment.IsDevelopment() ? "Host=127.0.0.1;Port=54339;Database=ai_todu_shared;Username=postgres"
+        : throw new InvalidOperationException("Configure the database connection."));
+    options.UseNpgsql(Environment.ExpandEnvironmentVariables(connection), database => database.MigrationsHistoryTable("__ef_migrations_history", "iam"));
+});
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddSingleton<IHashingService, HashingService>();
+builder.Services.AddSingleton<ITokenService, TokenService>();
+builder.Services.AddScoped<ICurrentIamUser, HttpCurrentIamUser>();
+// Each context uses the original Shared UnitOfWork with its own DbContext.
+builder.Services.AddScoped<IUserCommandService>(services => new UserCommandService(
+    services.GetRequiredService<IUserRepository>(), services.GetRequiredService<IHashingService>(),
+    services.GetRequiredService<ITokenService>(), new UnitOfWork(services.GetRequiredService<IamDbContext>()),
+    services.GetRequiredService<ICurrentIamUser>()));
+builder.Services.AddScoped<IUserQueryService, UserQueryService>();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("authentication", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+});
+
 builder.Services.AddScoped<IInventoryItemRepository, InventoryItemRepository>();
 builder.Services.AddScoped<IInventoryItemCommandService, InventoryItemCommandService>();
 builder.Services.AddScoped<IInventoryItemQueryService, InventoryItemQueryService>();
@@ -71,13 +109,13 @@ builder.Services.AddScoped<ICurrentWarehouseActor, HttpCurrentWarehouseActor>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IWarehouseClock, WarehouseClock>();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddAuthentication("Bearer").AddScheme<AuthenticationSchemeOptions, WarehouseAuthenticationHandler>("Bearer", _ => { });
+builder.Services.AddAuthentication("Bearer").AddScheme<AuthenticationSchemeOptions, IamAuthenticationHandler>("Bearer", _ => { });
 builder.Services.AddAuthorization();
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
     .WithOrigins(builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? ["http://localhost:5173", "http://127.0.0.1:5173"])
     .AllowAnyHeader().AllowAnyMethod().WithExposedHeaders("ETag")));
-if (!builder.Environment.IsDevelopment() && (builder.Configuration["Authentication:SigningKey"]?.Length ?? 0) < 32)
+if ((builder.Configuration["Authentication:SigningKey"]?.Length ?? 0) < 32)
     throw new InvalidOperationException("Configure a signing key with at least 32 characters.");
 
 var app = builder.Build();
@@ -91,6 +129,7 @@ app.UseRequestLocalization(new RequestLocalizationOptions
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.MapControllers();
 if (app.Environment.IsDevelopment())
 {
@@ -104,6 +143,7 @@ if (builder.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
 {
     await using var scope = app.Services.CreateAsyncScope();
     await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.MigrateAsync();
+    await scope.ServiceProvider.GetRequiredService<IamDbContext>().Database.MigrateAsync();
 }
 app.Run();
 public partial class Program { }

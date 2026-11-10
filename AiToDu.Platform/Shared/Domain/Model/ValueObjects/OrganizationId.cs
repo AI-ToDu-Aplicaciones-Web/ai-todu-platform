@@ -1,0 +1,12 @@
+namespace AiToDu.Platform.Shared.Domain.Model.ValueObjects;
+
+public readonly record struct OrganizationId
+{
+    public Guid Value { get; }
+    public OrganizationId(Guid value)
+    {
+        if (value == Guid.Empty) throw new ArgumentException("OrganizationId is required.");
+        Value = value;
+    }
+    public override string ToString() => Value.ToString();
+}

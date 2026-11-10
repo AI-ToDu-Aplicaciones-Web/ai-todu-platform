@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+<data name="RequestRejected" xml:space="preserve"><value>Solicitud de inventario rechazada</value></data>
+<data name="InvalidRequest" xml:space="preserve"><value>Revisa los datos y vuelve a intentarlo.</value></data>
+<data name="ItemNotFound" xml:space="preserve"><value>No se encontró el producto.</value></data>
+<data name="LotNotFound" xml:space="preserve"><value>No se encontró el lote.</value></data>
+<data name="DuplicateSku" xml:space="preserve"><value>El SKU ya existe en tu organización.</value></data>
+<data name="InvalidSku" xml:space="preserve"><value>Ingresa un SKU de hasta 64 caracteres.</value></data>
+<data name="InvalidName" xml:space="preserve"><value>Ingresa un nombre de hasta 160 caracteres.</value></data>
+<data name="InvalidCategory" xml:space="preserve"><value>Ingresa una categoría.</value></data>
+<data name="InvalidQuantity" xml:space="preserve"><value>Usa una cantidad no negativa con hasta tres decimales.</value></data>
+<data name="PositiveQuantityRequired" xml:space="preserve"><value>La cantidad debe ser mayor que cero.</value></data>
+<data name="InsufficientStock" xml:space="preserve"><value>No hay existencias suficientes.</value></data>
+<data name="LotUnavailable" xml:space="preserve"><value>El lote está en cuarentena o vencido.</value></data>
+<data name="VersionConflict" xml:space="preserve"><value>El inventario cambió. Actualízalo antes de volver a intentar.</value></data>
+<data name="CountOutdated" xml:space="preserve"><value>Las existencias cambiaron desde que comenzó el conteo.</value></data>
+<data name="OperationReused" xml:space="preserve"><value>La referencia de operación ya se utilizó con datos diferentes.</value></data>
+<data name="OperationIdRequired" xml:space="preserve"><value>Se requiere una referencia de operación.</value></data>
+<data name="InvalidMovementReason" xml:space="preserve"><value>Ingresa un motivo de hasta 500 caracteres.</value></data>
+<data name="InvalidLotCode" xml:space="preserve"><value>Ingresa el código del lote.</value></data>
+<data name="InvalidStorageLocation" xml:space="preserve"><value>Ingresa una ubicación.</value></data>
+<data name="ExpiredReceipt" xml:space="preserve"><value>El lote recibido ya está vencido.</value></data>
+<data name="LotExpiryConflict" xml:space="preserve"><value>El lote ya tiene otro vencimiento en esa ubicación.</value></data>
+<data name="LotLocationConflict" xml:space="preserve"><value>El lote ya existe en esa ubicación.</value></data>
+<data name="InvalidPrice" xml:space="preserve"><value>Usa un precio no negativo con hasta dos decimales.</value></data>
+<data name="ZeroAdjustment" xml:space="preserve"><value>El ajuste debe modificar las existencias.</value></data>
+<data name="ReturnReferenceRequired" xml:space="preserve"><value>Ingresa la referencia de devolución.</value></data>
+<data name="Forbidden" xml:space="preserve"><value>No tienes permiso para esta operación.</value></data>
+<data name="PersistenceConflict" xml:space="preserve"><value>Existe un conflicto con otra operación. Actualiza y vuelve a intentar.</value></data>
+<data name="InvalidPagination" xml:space="preserve"><value>La página debe ser positiva y el tamaño debe estar entre 1 y 100.</value></data>
+<data name="InvalidIdentifier" xml:space="preserve"><value>Se requiere un identificador válido.</value></data>
+<data name="InvalidMovementType" xml:space="preserve"><value>Selecciona un tipo de movimiento válido.</value></data>
+<data name="InvalidDisposition" xml:space="preserve"><value>Selecciona una clasificación válida.</value></data>
+</root>

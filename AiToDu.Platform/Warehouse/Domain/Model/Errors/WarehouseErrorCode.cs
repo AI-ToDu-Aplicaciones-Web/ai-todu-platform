@@ -1,0 +1,31 @@
+namespace AiToDu.Platform.Warehouse.Domain.Model.Errors;
+
+/// <summary>Typed catalog of inventory business rejections.</summary>
+public enum WarehouseErrorCode
+{
+    CountOutdated,
+    ExpiredReceipt,
+    InsufficientStock,
+    InvalidCategory,
+    InvalidDisposition,
+    InvalidIdentifier,
+    InvalidLotCode,
+    InvalidMovementReason,
+    InvalidMovementType,
+    InvalidName,
+    InvalidPagination,
+    InvalidPrice,
+    InvalidQuantity,
+    InvalidSku,
+    InvalidStorageLocation,
+    LotExpiryConflict,
+    LotLocationConflict,
+    LotNotFound,
+    LotUnavailable,
+    OperationIdRequired,
+    OperationReused,
+    PositiveQuantityRequired,
+    ReturnReferenceRequired,
+    VersionConflict,
+    ZeroAdjustment,
+}

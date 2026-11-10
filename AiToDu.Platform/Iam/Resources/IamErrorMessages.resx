@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+<resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+<resheader name="version"><value>2.0</value></resheader>
+<data name="InvalidEmail" xml:space="preserve"><value>Enter a valid email address.</value></data>
+<data name="InvalidPassword" xml:space="preserve"><value>Use at least 12 characters and at most 72 UTF-8 bytes.</value></data>
+<data name="RequiredFields" xml:space="preserve"><value>Complete your name and organization (maximum 160 characters each).</value></data>
+<data name="DuplicateEmail" xml:space="preserve"><value>This email is already registered.</value></data>
+<data name="InvalidCredentials" xml:space="preserve"><value>The email or password is incorrect.</value></data>
+<data name="AccountDisabled" xml:space="preserve"><value>This account is disabled. Contact your administrator.</value></data>
+<data name="Forbidden" xml:space="preserve"><value>You do not have permission for this action.</value></data>
+<data name="UserNotFound" xml:space="preserve"><value>The user was not found.</value></data>
+<data name="InvalidRole" xml:space="preserve"><value>Select warehouse operator or sales clerk.</value></data>
+<data name="CannotDisableSelf" xml:space="preserve"><value>You cannot disable your own account.</value></data>
+</root>

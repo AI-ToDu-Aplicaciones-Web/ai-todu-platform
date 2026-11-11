@@ -5,5 +5,5 @@ namespace AiToDu.Platform.Iam.Interfaces.Rest.Transform;
 public static class UserResourceFromEntityAssembler
 {
     public static UserResource ToResourceFromEntity(User user) => new(user.PublicId, user.OrganizationId,
-        user.OrganizationName, user.FullName, user.Email.Value, user.Role, user.IsActive);
+        user.OrganizationName, user.FullName, user.Email.Value, user.Role, user.IsActive, user.CanManageStock, user.CanSell);
 }

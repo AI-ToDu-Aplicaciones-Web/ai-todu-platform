@@ -60,6 +60,18 @@ public sealed class UserCommandService(IUserRepository repository, IHashingServi
         catch (IamDomainException) { return Failure<AuthenticatedUser>(IamError.InvalidCredentials); }
     }
 
+    public async Task<Result<User>> SetAccess(Guid id, string role, bool? inventory, bool? sales, CancellationToken ct)
+    {
+        if (!currentUser.IsOwner) return Failure<User>(IamError.Forbidden);
+        var user = await repository.FindByPublicIdAsync(id, ct);
+        if (user == null || user.OrganizationId != currentUser.OrganizationId) return Failure<User>(IamError.UserNotFound);
+        if (user.Role == UserRole.Owner) return Failure<User>(IamError.Forbidden);
+        try { user.SetAccess(role, inventory, sales); }
+        catch (IamDomainException error) { return Failure<User>(error.Code); }
+        await unitOfWork.CompleteAsync(ct);
+        return Result<User>.Success(user);
+    }
+
     public async Task<Result<User>> Handle(SetUserStatusCommand c, CancellationToken ct)
     {
         if (!currentUser.IsOwner) return Failure<User>(IamError.Forbidden);

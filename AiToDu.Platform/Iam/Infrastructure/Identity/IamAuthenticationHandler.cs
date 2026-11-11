@@ -21,6 +21,9 @@ public sealed class IamAuthenticationHandler(IOptionsMonitor<AuthenticationSchem
         var user = await users.FindByPublicIdAsync(publicId, Context.RequestAborted);
         if (user is null || !user.IsActive || user.OrganizationId != organizationId || !principal.IsInRole(user.Role))
             return AuthenticateResult.Fail("The account is unavailable.");
+        var identity = (ClaimsIdentity)principal.Identity!;
+        if (user.CanManageStock) identity.AddClaim(new Claim("permission", "inventory.write"));
+        if (user.CanSell) identity.AddClaim(new Claim("permission", "sales.write"));
         return AuthenticateResult.Success(new AuthenticationTicket(principal, Scheme.Name));
     }
 }

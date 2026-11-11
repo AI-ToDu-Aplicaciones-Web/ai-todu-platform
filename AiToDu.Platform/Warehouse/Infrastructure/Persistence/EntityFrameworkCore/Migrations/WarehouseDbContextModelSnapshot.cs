@@ -19,6 +19,69 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
                 .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
+            modelBuilder.Entity("AiToDu.Platform.Activity.Domain.Model.AuditEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("actor_id");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("method");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("path");
+
+                    b.HasKey("Id")
+                        .HasName("p_k_audit_entries");
+
+                    b.HasIndex("OrganizationId", "OccurredAt")
+                        .HasDatabaseName("ix_audit_org_date");
+
+                    b.ToTable("audit_entries", (string)null);
+                });
+
+            modelBuilder.Entity("AiToDu.Platform.Activity.Domain.Model.NotificationRead", b =>
+                {
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("organization_id");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("actor_id");
+
+                    b.Property<string>("AlertKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("alert_key");
+
+                    b.Property<DateTime>("ReadAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("read_at");
+
+                    b.HasKey("OrganizationId", "ActorId", "AlertKey")
+                        .HasName("p_k_notification_reads");
+
+                    b.ToTable("notification_reads", (string)null);
+                });
+
             modelBuilder.Entity("AiToDu.Platform.Sales.Domain.Model.Customer", b =>
                 {
                     b.Property<Guid>("Id")
@@ -110,6 +173,29 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
                         .HasDatabaseName("ux_sale_operation");
 
                     b.ToTable("sales_orders", (string)null);
+                });
+
+            modelBuilder.Entity("AiToDu.Platform.Subscriptions.Domain.Model.Subscription", b =>
+                {
+                    b.Property<Guid>("OrganizationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("Plan")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("plan");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("OrganizationId")
+                        .HasName("p_k_subscriptions");
+
+                    b.ToTable("subscriptions", (string)null);
                 });
 
             modelBuilder.Entity("AiToDu.Platform.Warehouse.Domain.Model.Aggregates.InventoryItem", b =>

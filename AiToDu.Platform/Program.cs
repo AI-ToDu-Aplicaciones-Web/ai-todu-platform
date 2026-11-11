@@ -45,7 +45,12 @@ using ProblemDetailsFactory = AiToDu.Platform.Shared.Interfaces.Rest.ProblemDeta
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
-builder.Services.AddControllers(options => options.Conventions.Add(new KebabCaseRouteNamingConvention()))
+builder.Services.AddScoped<AiToDu.Platform.Activity.Infrastructure.ActivityService>();
+builder.Services.AddScoped<AiToDu.Platform.Subscriptions.Infrastructure.SubscriptionService>();
+builder.Services.AddControllers(options => {
+    options.Conventions.Add(new KebabCaseRouteNamingConvention());
+    options.Filters.Add<AiToDu.Platform.Activity.Interfaces.Rest.AuditFilter>();
+})
     .AddDataAnnotationsLocalization()
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddProblemDetails();
@@ -114,7 +119,10 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IWarehouseClock, WarehouseClock>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddAuthentication("Bearer").AddScheme<AuthenticationSchemeOptions, IamAuthenticationHandler>("Bearer", _ => { });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options => {
+    options.AddPolicy("inventory.write", policy => policy.RequireClaim("permission", "inventory.write"));
+    options.AddPolicy("sales.write", policy => policy.RequireClaim("permission", "sales.write"));
+});
 builder.Services.AddOpenApi(options => options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy
     .WithOrigins(builder.Configuration.GetSection("Cors:Origins").Get<string[]>() ?? ["http://localhost:5173", "http://127.0.0.1:5173"])

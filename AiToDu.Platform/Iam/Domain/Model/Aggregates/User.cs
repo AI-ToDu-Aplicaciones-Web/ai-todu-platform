@@ -14,6 +14,18 @@ public sealed class User : AggregateRoot, IAuditableEntity
     public EmailAddress Email { get; private set; } = null!;
     public string PasswordHash { get; private set; } = string.Empty;
     public string Role { get; private set; } = string.Empty;
+    public bool? InventoryOverride { get; private set; }
+    public bool? SalesOverride { get; private set; }
+    public bool CanManageStock => Role == UserRole.Owner || (InventoryOverride ?? Role == UserRole.WarehouseOperator);
+    public bool CanSell => Role == UserRole.Owner || (SalesOverride ?? Role == UserRole.SalesClerk);
+
+    public void SetAccess(string role, bool? inventory, bool? sales)
+    {
+        UserRole.ValidateStaffRole(role);
+        Role = role;
+        InventoryOverride = inventory;
+        SalesOverride = sales;
+    }
     public bool IsActive { get; private set; }
     public DateTimeOffset? CreatedAt { get; set; }
     public DateTimeOffset? UpdatedAt { get; set; }

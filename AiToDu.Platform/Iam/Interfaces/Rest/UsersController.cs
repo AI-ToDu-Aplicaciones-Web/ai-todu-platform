@@ -28,6 +28,7 @@ public sealed class UsersController(IUserCommandService commands, IUserQueryServ
             : IamActionResultAssembler.ToProblem(this, result.DomainError, result.Error, problems, messages);
     }
 
+    [AiToDu.Platform.Subscriptions.Interfaces.Rest.PlanAllocation("users")]
     [HttpPost]
     public async Task<IActionResult> Create(CreateOrganizationUserResource resource, CancellationToken ct)
     {
@@ -37,6 +38,14 @@ public sealed class UsersController(IUserCommandService commands, IUserQueryServ
             : IamActionResultAssembler.ToProblem(this, result.DomainError, result.Error, problems, messages);
     }
 
+    public sealed record AccessResource(string Role, bool? Inventory, bool? Sales);
+    [HttpPatch("{id:guid}/access")]
+    public async Task<IActionResult> SetAccess(Guid id, AccessResource resource, CancellationToken ct)
+    {
+        var result = await commands.SetAccess(id, resource.Role, resource.Inventory, resource.Sales, ct);
+        return result.IsSuccess ? Ok(UserResourceFromEntityAssembler.ToResourceFromEntity(result.Value!))
+            : IamActionResultAssembler.ToProblem(this, result.DomainError, result.Error, problems, messages);
+    }
     [HttpPatch("{id:guid}/status")]
     public async Task<IActionResult> SetStatus(Guid id, SetUserStatusResource resource, CancellationToken ct)
     {

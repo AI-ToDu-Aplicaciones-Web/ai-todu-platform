@@ -9,5 +9,6 @@ public interface IUserCommandService
     Task<Result<User>> Handle(SignUpCommand command, CancellationToken ct);
     Task<Result<AuthenticatedUser>> Handle(SignInCommand command, CancellationToken ct);
     Task<Result<User>> Handle(CreateOrganizationUserCommand command, CancellationToken ct);
+    Task<Result<User>> SetAccess(Guid id, string role, bool? inventory, bool? sales, CancellationToken ct);
     Task<Result<User>> Handle(SetUserStatusCommand command, CancellationToken ct);
 }

@@ -43,45 +43,46 @@ public sealed class InventoryItemsController(IInventoryItemCommandService comman
         return Ok(InventoryItemResourceFromEntityAssembler.ToResourceFromEntity(item, Today));
     }
 
+    [AiToDu.Platform.Subscriptions.Interfaces.Rest.PlanAllocation("products")]
     [HttpPost]
     [ProducesResponseType<InventoryItemResource>(StatusCodes.Status201Created)]
-    [Authorize(Roles = "BUSINESS_OWNER,WAREHOUSE_OPERATOR")]
+    [Authorize(Policy = "inventory.write")]
     public async Task<IActionResult> Create([FromBody] CreateInventoryItemResource resource, CancellationToken ct) =>
         InventoryActionResultAssembler.ToActionResult(this, await commands.Handle(CreateInventoryItemCommandFromResourceAssembler.ToCommandFromResource(resource), ct), Today, messages, problemDetailsFactory, true);
 
     [HttpPost("{id:int:min(1)}/lots")]
     [ProducesResponseType<InventoryItemResource>(StatusCodes.Status200OK)]
-    [Authorize(Roles = "BUSINESS_OWNER,WAREHOUSE_OPERATOR")]
+    [Authorize(Policy = "inventory.write")]
     public async Task<IActionResult> Receive(int id, [FromBody] ReceiveStockLotResource resource, CancellationToken ct) =>
         InventoryActionResultAssembler.ToActionResult(this, await commands.Handle(ReceiveStockLotCommandFromResourceAssembler.ToCommandFromResource(id, resource), ct), Today, messages, problemDetailsFactory, false);
 
     [HttpPost("{id:int:min(1)}/movements")]
     [ProducesResponseType<InventoryItemResource>(StatusCodes.Status200OK)]
-    [Authorize(Roles = "BUSINESS_OWNER,WAREHOUSE_OPERATOR")]
+    [Authorize(Policy = "inventory.write")]
     public async Task<IActionResult> Move(int id, [FromBody] RecordInventoryMovementResource resource, CancellationToken ct) =>
         InventoryActionResultAssembler.ToActionResult(this, await commands.Handle(RecordInventoryMovementCommandFromResourceAssembler.ToCommandFromResource(id, resource), ct), Today, messages, problemDetailsFactory, false);
 
     [HttpPost("{id:int:min(1)}/counts")]
     [ProducesResponseType<InventoryItemResource>(StatusCodes.Status200OK)]
-    [Authorize(Roles = "BUSINESS_OWNER,WAREHOUSE_OPERATOR")]
+    [Authorize(Policy = "inventory.write")]
     public async Task<IActionResult> Count(int id, [FromBody] RegisterStockCountResource resource, CancellationToken ct) =>
         InventoryActionResultAssembler.ToActionResult(this, await commands.Handle(RegisterStockCountCommandFromResourceAssembler.ToCommandFromResource(id, resource), ct), Today, messages, problemDetailsFactory, false);
 
     [HttpPost("{id:int:min(1)}/returns")]
     [ProducesResponseType<InventoryItemResource>(StatusCodes.Status200OK)]
-    [Authorize(Roles = "BUSINESS_OWNER,WAREHOUSE_OPERATOR")]
+    [Authorize(Policy = "inventory.write")]
     public async Task<IActionResult> Return(int id, [FromBody] ClassifyInventoryReturnResource resource, CancellationToken ct) =>
         InventoryActionResultAssembler.ToActionResult(this, await commands.Handle(ClassifyInventoryReturnCommandFromResourceAssembler.ToCommandFromResource(id, resource), ct), Today, messages, problemDetailsFactory, false);
 
     [HttpPatch("{id:int:min(1)}/lots/{lotId:guid}/quarantine")]
     [ProducesResponseType<InventoryItemResource>(StatusCodes.Status200OK)]
-    [Authorize(Roles = "BUSINESS_OWNER,WAREHOUSE_OPERATOR")]
+    [Authorize(Policy = "inventory.write")]
     public async Task<IActionResult> Quarantine(int id, Guid lotId, [FromBody] ChangeLotQuarantineResource resource, CancellationToken ct) =>
         InventoryActionResultAssembler.ToActionResult(this, await commands.Handle(ChangeLotQuarantineCommandFromResourceAssembler.ToCommandFromResource(id, lotId, resource), ct), Today, messages, problemDetailsFactory, false);
 
     [HttpPatch("{id:int:min(1)}/lots/{lotId:guid}/location")]
     [ProducesResponseType<InventoryItemResource>(StatusCodes.Status200OK)]
-    [Authorize(Roles = "BUSINESS_OWNER,WAREHOUSE_OPERATOR")]
+    [Authorize(Policy = "inventory.write")]
     public async Task<IActionResult> Relocate(int id, Guid lotId, [FromBody] RelocateStockLotResource resource, CancellationToken ct) =>
         InventoryActionResultAssembler.ToActionResult(this, await commands.Handle(RelocateStockLotCommandFromResourceAssembler.ToCommandFromResource(id, lotId, resource), ct), Today, messages, problemDetailsFactory, false);
 }

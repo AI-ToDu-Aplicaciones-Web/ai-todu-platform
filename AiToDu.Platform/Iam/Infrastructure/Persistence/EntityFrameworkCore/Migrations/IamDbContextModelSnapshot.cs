@@ -42,6 +42,10 @@ namespace AiToDu.Platform.Iam.Infrastructure.Persistence.EntityFrameworkCore.Mig
                         .HasColumnType("varchar(160)")
                         .HasColumnName("full_name");
 
+                    b.Property<bool?>("InventoryOverride")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("inventory_override");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)")
                         .HasColumnName("is_active");
@@ -71,6 +75,10 @@ namespace AiToDu.Platform.Iam.Infrastructure.Persistence.EntityFrameworkCore.Mig
                         .HasMaxLength(40)
                         .HasColumnType("varchar(40)")
                         .HasColumnName("role");
+
+                    b.Property<bool?>("SalesOverride")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("sales_override");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("datetime")

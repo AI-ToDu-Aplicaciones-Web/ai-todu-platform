@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AiToDu.Platform.Sales.Interfaces.Rest;
 
-[ApiController, Authorize(Roles = "BUSINESS_OWNER,SALES_CLERK")]
+[ApiController, Authorize(Policy = "sales.write")]
 [Route("api/v1/transactions")]
 public sealed class TransactionsController(SalesService sales, SalesRepository repository) : ControllerBase
 {

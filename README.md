@@ -10,20 +10,27 @@ Identity, inventory and commercial services for Sprint 2, using C# 14, ASP.NET C
 
 ## Start locally
 
-Create an empty MySQL 8 database for development and grant the application user access to that database. These migrations initialize a MySQL schema; moving records from a former PostgreSQL installation requires a separate data import. Configure a random signing secret locally (at least 32 characters; never commit its value):
+### First-time setup
+
+Start MySQL 8 with its default connection settings. Create the `ai_todu` database and grant the application user access. From the repository root, use the .NET 10 SDK to save the following development settings. Replace both placeholders with your own values. Use a random signing key of at least 32 characters.
 
 ```powershell
-dotnet user-secrets set "Authentication:SigningKey" "YOUR_RANDOM_SECRET_AT_LEAST_32_CHARACTERS" --project AiToDu.Platform
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost;Database=ai_todu;User ID=ai_todu;Password=YOUR_LOCAL_PASSWORD" --project AiToDu.Platform
+dotnet user-secrets set "Authentication:SigningKey" "YOUR_RANDOM_SIGNING_KEY" --project AiToDu.Platform
+dotnet user-secrets set "Database:MigrateOnStartup" "true" --project AiToDu.Platform
 ```
 
-On the original development computer this secret has already been configured outside the repository. Configure the connection string and launch the API. Example for PowerShell; replace the connection details with your local database:
+The API applies pending migrations to MySQL at startup. Moving records from a former PostgreSQL installation requires a separate data import.
+
+### Daily startup
+
+With MySQL running, start the API from the repository root:
 
 ```powershell
-$env:ASPNETCORE_ENVIRONMENT = 'Development'
-$env:ConnectionStrings__DefaultConnection = 'Server=localhost;Port=3306;Database=ai_todu;User ID=ai_todu;Password=YOUR_LOCAL_PASSWORD'
-$env:Database__MigrateOnStartup = 'true'
-dotnet run --project AiToDu.Platform --no-launch-profile --urls http://localhost:5080
+dotnet run --project AiToDu.Platform
 ```
+
+The checked-in launch profile selects the development environment and the listening address. Keep this terminal open. Append `/api/v1/health` to the address printed after **Now listening on**. A response with `"status": "UP"` confirms the API can reach MySQL.
 
 Open the frontend's `inventory.html#/sign-up` to create your organization and administrator, then sign in. The owner can register warehouse operators and sales clerks under **Users**. Data previously entered with the old demonstration organization stays in that organization; new accounts receive their own organization and inventory.
 
@@ -37,9 +44,7 @@ Authentication__Audience=ai-todu-webapp
 
 JWTs use HS256 and carry `sub` (user public UUID), `organization_id` (organization UUID), `role`, issuer, audience and expiration. Tokens last 60 minutes. Every protected request also checks that the account still exists and is active. `BUSINESS_OWNER` and `WAREHOUSE_OPERATOR` can manage inventory. `SALES_CLERK` can read it. Organization and actor are taken from the verified identity, never from request bodies. The host requires a signing key in every environment. The former demonstration authentication adapter was removed. Use HTTPS at the hosting edge.
 
-Interactive OpenAPI documentation: `http://localhost:5080/scalar/v1`.
-OpenAPI contract: `http://localhost:5080/openapi/v1.json`.
-Database readiness: `http://localhost:5080/api/v1/health`.
+In development, append `/scalar/v1` to the API address for interactive documentation or `/openapi/v1.json` for the OpenAPI contract.
 
 For a controlled deployment, apply migrations separately rather than automatically:
 

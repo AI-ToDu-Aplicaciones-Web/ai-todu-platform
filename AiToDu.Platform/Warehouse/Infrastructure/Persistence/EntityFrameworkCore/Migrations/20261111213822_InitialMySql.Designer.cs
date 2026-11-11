@@ -5,15 +5,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCore.Migrations
 {
     [DbContext(typeof(WarehouseDbContext))]
-    [Migration("20261110194700_InitialWarehouse")]
-    partial class InitialWarehouse
+    [Migration("20261111213822_InitialMySql")]
+    partial class InitialMySql
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -21,57 +20,53 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "10.0.14")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
-
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("AiToDu.Platform.Warehouse.Domain.Model.Aggregates.InventoryItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("int")
                         .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Category")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
+                        .HasColumnType("varchar(100)")
                         .HasColumnName("category");
 
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("datetime")
                         .HasColumnName("created_at");
 
                     b.Property<decimal>("MinimumStock")
                         .HasPrecision(18, 3)
-                        .HasColumnType("numeric(18,3)")
+                        .HasColumnType("decimal(18,3)")
                         .HasColumnName("minimum_stock");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(160)
-                        .HasColumnType("character varying(160)")
+                        .HasColumnType("varchar(160)")
                         .HasColumnName("name");
 
                     b.Property<Guid>("OrganizationId")
-                        .HasColumnType("uuid")
+                        .HasColumnType("char(36)")
                         .HasColumnName("organization_id");
 
                     b.Property<string>("Sku")
                         .IsRequired()
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
+                        .HasColumnType("varchar(64)")
                         .HasColumnName("sku");
 
                     b.Property<decimal>("UnitPrice")
                         .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)")
+                        .HasColumnType("decimal(18,2)")
                         .HasColumnName("unit_price");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("datetime")
                         .HasColumnName("updated_at");
 
                     b.Property<long>("Version")
@@ -80,13 +75,13 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
                         .HasColumnName("version");
 
                     b.HasKey("Id")
-                        .HasName("p_k_inventory_items");
+                        .HasName("p_k_warehouse_inventory_items");
 
                     b.HasIndex("OrganizationId", "Sku")
                         .IsUnique()
                         .HasDatabaseName("ux_inventory_items_organization_sku");
 
-                    b.ToTable("inventory_items", "warehouse");
+                    b.ToTable("warehouse_inventory_items", (string)null);
                 });
 
             modelBuilder.Entity("AiToDu.Platform.Warehouse.Domain.Model.Aggregates.InventoryItem", b =>
@@ -94,214 +89,214 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
                     b.OwnsMany("AiToDu.Platform.Warehouse.Domain.Model.Entities.InventoryMovement", "Movements", b1 =>
                         {
                             b1.Property<int>("inventory_item_id")
-                                .HasColumnType("integer")
+                                .HasColumnType("int")
                                 .HasColumnName("inventory_item_id");
 
                             b1.Property<Guid>("Id")
-                                .HasColumnType("uuid")
+                                .HasColumnType("char(36)")
                                 .HasColumnName("id");
 
                             b1.Property<Guid>("ActorId")
-                                .HasColumnType("uuid")
+                                .HasColumnType("char(36)")
                                 .HasColumnName("actor_id");
 
                             b1.Property<decimal>("After")
                                 .HasPrecision(18, 3)
-                                .HasColumnType("numeric(18,3)")
+                                .HasColumnType("decimal(18,3)")
                                 .HasColumnName("after");
 
                             b1.Property<decimal>("Before")
                                 .HasPrecision(18, 3)
-                                .HasColumnType("numeric(18,3)")
+                                .HasColumnType("decimal(18,3)")
                                 .HasColumnName("before");
 
                             b1.Property<decimal>("Change")
                                 .HasPrecision(18, 3)
-                                .HasColumnType("numeric(18,3)")
+                                .HasColumnType("decimal(18,3)")
                                 .HasColumnName("change");
 
                             b1.Property<Guid>("LotId")
-                                .HasColumnType("uuid")
+                                .HasColumnType("char(36)")
                                 .HasColumnName("lot_id");
 
                             b1.Property<DateTimeOffset>("OccurredAt")
-                                .HasColumnType("timestamp with time zone")
+                                .HasColumnType("datetime")
                                 .HasColumnName("occurred_at");
 
                             b1.Property<Guid>("OperationId")
-                                .HasColumnType("uuid")
+                                .HasColumnType("char(36)")
                                 .HasColumnName("operation_id");
 
                             b1.Property<string>("Reason")
                                 .IsRequired()
-                                .HasColumnType("text")
+                                .HasColumnType("longtext")
                                 .HasColumnName("reason");
 
                             b1.Property<string>("Type")
                                 .IsRequired()
-                                .HasColumnType("text")
+                                .HasColumnType("longtext")
                                 .HasColumnName("type");
 
                             b1.HasKey("inventory_item_id", "Id")
-                                .HasName("p_k_inventory_movements");
+                                .HasName("p_k_warehouse_inventory_movements");
 
-                            b1.ToTable("inventory_movements", "warehouse");
+                            b1.ToTable("warehouse_inventory_movements", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("inventory_item_id")
-                                .HasConstraintName("f_k_inventory_movements_inventory_items_inventory_item_id");
+                                .HasConstraintName("f_k_warehouse_inventory_movements_warehouse_inventory_items_inve~");
                         });
 
                     b.OwnsMany("AiToDu.Platform.Warehouse.Domain.Model.Entities.InventoryOperation", "Operations", b1 =>
                         {
                             b1.Property<int>("inventory_item_id")
-                                .HasColumnType("integer")
+                                .HasColumnType("int")
                                 .HasColumnName("inventory_item_id");
 
                             b1.Property<Guid>("Id")
-                                .HasColumnType("uuid")
+                                .HasColumnType("char(36)")
                                 .HasColumnName("id");
 
                             b1.Property<string>("Signature")
                                 .IsRequired()
-                                .HasColumnType("text")
+                                .HasColumnType("longtext")
                                 .HasColumnName("signature");
 
                             b1.HasKey("inventory_item_id", "Id")
-                                .HasName("p_k_inventory_operations");
+                                .HasName("p_k_warehouse_inventory_operations");
 
-                            b1.ToTable("inventory_operations", "warehouse");
+                            b1.ToTable("warehouse_inventory_operations", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("inventory_item_id")
-                                .HasConstraintName("f_k_inventory_operations_inventory_items_inventory_item_id");
+                                .HasConstraintName("f_k_warehouse_inventory_operations_warehouse_inventory_items_inv~");
                         });
 
                     b.OwnsMany("AiToDu.Platform.Warehouse.Domain.Model.Entities.InventoryReturn", "Returns", b1 =>
                         {
                             b1.Property<int>("inventory_item_id")
-                                .HasColumnType("integer")
+                                .HasColumnType("int")
                                 .HasColumnName("inventory_item_id");
 
                             b1.Property<Guid>("Id")
-                                .HasColumnType("uuid")
+                                .HasColumnType("char(36)")
                                 .HasColumnName("id");
 
                             b1.Property<Guid>("ActorId")
-                                .HasColumnType("uuid")
+                                .HasColumnType("char(36)")
                                 .HasColumnName("actor_id");
 
                             b1.Property<Guid?>("DestinationLotId")
-                                .HasColumnType("uuid")
+                                .HasColumnType("char(36)")
                                 .HasColumnName("destination_lot_id");
 
                             b1.Property<string>("Disposition")
                                 .IsRequired()
-                                .HasColumnType("text")
+                                .HasColumnType("longtext")
                                 .HasColumnName("disposition");
 
                             b1.Property<DateTimeOffset>("OccurredAt")
-                                .HasColumnType("timestamp with time zone")
+                                .HasColumnType("datetime")
                                 .HasColumnName("occurred_at");
 
                             b1.Property<Guid>("OperationId")
-                                .HasColumnType("uuid")
+                                .HasColumnType("char(36)")
                                 .HasColumnName("operation_id");
 
                             b1.Property<decimal>("Quantity")
                                 .HasPrecision(18, 3)
-                                .HasColumnType("numeric(18,3)")
+                                .HasColumnType("decimal(18,3)")
                                 .HasColumnName("quantity");
 
                             b1.Property<string>("Reason")
                                 .IsRequired()
-                                .HasColumnType("text")
+                                .HasColumnType("longtext")
                                 .HasColumnName("reason");
 
                             b1.Property<string>("Reference")
                                 .IsRequired()
-                                .HasColumnType("text")
+                                .HasColumnType("longtext")
                                 .HasColumnName("reference");
 
                             b1.Property<Guid>("SourceLotId")
-                                .HasColumnType("uuid")
+                                .HasColumnType("char(36)")
                                 .HasColumnName("source_lot_id");
 
                             b1.HasKey("inventory_item_id", "Id")
-                                .HasName("p_k_inventory_returns");
+                                .HasName("p_k_warehouse_inventory_returns");
 
-                            b1.ToTable("inventory_returns", "warehouse");
+                            b1.ToTable("warehouse_inventory_returns", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("inventory_item_id")
-                                .HasConstraintName("f_k_inventory_returns_inventory_items_inventory_item_id");
+                                .HasConstraintName("f_k_warehouse_inventory_returns_warehouse_inventory_items_invent~");
                         });
 
                     b.OwnsMany("AiToDu.Platform.Warehouse.Domain.Model.Entities.StockCount", "Counts", b1 =>
                         {
                             b1.Property<int>("inventory_item_id")
-                                .HasColumnType("integer")
+                                .HasColumnType("int")
                                 .HasColumnName("inventory_item_id");
 
                             b1.Property<Guid>("Id")
-                                .HasColumnType("uuid")
+                                .HasColumnType("char(36)")
                                 .HasColumnName("id");
 
                             b1.Property<Guid>("ActorId")
-                                .HasColumnType("uuid")
+                                .HasColumnType("char(36)")
                                 .HasColumnName("actor_id");
 
                             b1.Property<decimal>("CountedQuantity")
                                 .HasPrecision(18, 3)
-                                .HasColumnType("numeric(18,3)")
+                                .HasColumnType("decimal(18,3)")
                                 .HasColumnName("counted_quantity");
 
                             b1.Property<decimal>("ExpectedQuantity")
                                 .HasPrecision(18, 3)
-                                .HasColumnType("numeric(18,3)")
+                                .HasColumnType("decimal(18,3)")
                                 .HasColumnName("expected_quantity");
 
                             b1.Property<Guid>("LotId")
-                                .HasColumnType("uuid")
+                                .HasColumnType("char(36)")
                                 .HasColumnName("lot_id");
 
                             b1.Property<DateTimeOffset>("OccurredAt")
-                                .HasColumnType("timestamp with time zone")
+                                .HasColumnType("datetime")
                                 .HasColumnName("occurred_at");
 
                             b1.Property<Guid>("OperationId")
-                                .HasColumnType("uuid")
+                                .HasColumnType("char(36)")
                                 .HasColumnName("operation_id");
 
                             b1.Property<string>("Reason")
                                 .IsRequired()
-                                .HasColumnType("text")
+                                .HasColumnType("longtext")
                                 .HasColumnName("reason");
 
                             b1.HasKey("inventory_item_id", "Id")
-                                .HasName("p_k_stock_counts");
+                                .HasName("p_k_warehouse_stock_counts");
 
-                            b1.ToTable("stock_counts", "warehouse");
+                            b1.ToTable("warehouse_stock_counts", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("inventory_item_id")
-                                .HasConstraintName("f_k_stock_counts_inventory_items_inventory_item_id");
+                                .HasConstraintName("f_k_warehouse_stock_counts_warehouse_inventory_items_inventory_i~");
                         });
 
                     b.OwnsMany("AiToDu.Platform.Warehouse.Domain.Model.Entities.StockLot", "Lots", b1 =>
                         {
                             b1.Property<int>("inventory_item_id")
-                                .HasColumnType("integer")
+                                .HasColumnType("int")
                                 .HasColumnName("inventory_item_id");
 
                             b1.Property<Guid>("Id")
-                                .HasColumnType("uuid")
+                                .HasColumnType("char(36)")
                                 .HasColumnName("id");
 
                             b1.Property<string>("Code")
                                 .IsRequired()
                                 .HasMaxLength(64)
-                                .HasColumnType("character varying(64)")
+                                .HasColumnType("varchar(64)")
                                 .HasColumnName("code");
 
                             b1.Property<DateOnly?>("ExpiresOn")
@@ -309,32 +304,32 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
                                 .HasColumnName("expires_on");
 
                             b1.Property<bool>("IsQuarantined")
-                                .HasColumnType("boolean")
+                                .HasColumnType("tinyint(1)")
                                 .HasColumnName("is_quarantined");
 
                             b1.Property<string>("Location")
                                 .IsRequired()
                                 .HasMaxLength(120)
-                                .HasColumnType("character varying(120)")
+                                .HasColumnType("varchar(120)")
                                 .HasColumnName("location");
 
                             b1.Property<decimal>("Quantity")
                                 .HasPrecision(18, 3)
-                                .HasColumnType("numeric(18,3)")
+                                .HasColumnType("decimal(18,3)")
                                 .HasColumnName("quantity");
 
                             b1.HasKey("inventory_item_id", "Id")
-                                .HasName("p_k_stock_lots");
+                                .HasName("p_k_warehouse_stock_lots");
 
                             b1.HasIndex("inventory_item_id", "Code", "Location")
                                 .IsUnique()
-                                .HasDatabaseName("i_x_stock_lots_inventory_item_id_code_location");
+                                .HasDatabaseName("i_x_warehouse_stock_lots_inventory_item_id_code_location");
 
-                            b1.ToTable("stock_lots", "warehouse");
+                            b1.ToTable("warehouse_stock_lots", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("inventory_item_id")
-                                .HasConstraintName("f_k_stock_lots_inventory_items_inventory_item_id");
+                                .HasConstraintName("f_k_warehouse_stock_lots_warehouse_inventory_items_inventory_ite~");
                         });
 
                     b.Navigation("Counts");

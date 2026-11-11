@@ -11,7 +11,7 @@ public static class ModelBuilderExtensions
     public static void ApplyWarehouseConfiguration(this ModelBuilder builder)
     {
         var item = builder.Entity<InventoryItem>();
-        item.ToTable("inventory_items", "warehouse"); item.HasKey(x => x.Id);
+        item.ToTable("warehouse_inventory_items"); item.HasKey(x => x.Id);
         item.Property(x => x.Id).HasConversion(new StronglyTypedIdConverter<InventoryItemId, int>(x => new InventoryItemId(x))).ValueGeneratedOnAdd();
         item.Property(x => x.OrganizationId).HasConversion(x => x.Value, x => new OrganizationId(x));
         item.Property(x => x.Sku).HasConversion(x => x.Value, x => new Sku(x)).HasMaxLength(64);
@@ -24,7 +24,7 @@ public static class ModelBuilderExtensions
 
         item.OwnsMany(x => x.Lots, lot =>
         {
-            lot.ToTable("stock_lots", "warehouse");
+            lot.ToTable("warehouse_stock_lots");
             lot.WithOwner().HasForeignKey("inventory_item_id");
             lot.Property<InventoryItemId>("inventory_item_id").HasConversion(new StronglyTypedIdConverter<InventoryItemId, int>(x => new InventoryItemId(x)));
             lot.HasKey("inventory_item_id", nameof(StockLot.Id));
@@ -39,7 +39,7 @@ public static class ModelBuilderExtensions
 
         item.OwnsMany(x => x.Movements, movement =>
         {
-            movement.ToTable("inventory_movements", "warehouse");
+            movement.ToTable("warehouse_inventory_movements");
             movement.WithOwner().HasForeignKey("inventory_item_id");
             movement.Property<InventoryItemId>("inventory_item_id").HasConversion(new StronglyTypedIdConverter<InventoryItemId, int>(x => new InventoryItemId(x)));
             movement.HasKey("inventory_item_id", nameof(InventoryMovement.Id));
@@ -53,7 +53,7 @@ public static class ModelBuilderExtensions
 
         item.OwnsMany(x => x.Counts, count =>
         {
-            count.ToTable("stock_counts", "warehouse");
+            count.ToTable("warehouse_stock_counts");
             count.WithOwner().HasForeignKey("inventory_item_id");
             count.Property<InventoryItemId>("inventory_item_id").HasConversion(new StronglyTypedIdConverter<InventoryItemId, int>(x => new InventoryItemId(x)));
             count.HasKey("inventory_item_id", nameof(StockCount.Id));
@@ -66,7 +66,7 @@ public static class ModelBuilderExtensions
 
         item.OwnsMany(x => x.Returns, returned =>
         {
-            returned.ToTable("inventory_returns", "warehouse");
+            returned.ToTable("warehouse_inventory_returns");
             returned.WithOwner().HasForeignKey("inventory_item_id");
             returned.Property<InventoryItemId>("inventory_item_id").HasConversion(new StronglyTypedIdConverter<InventoryItemId, int>(x => new InventoryItemId(x)));
             returned.HasKey("inventory_item_id", nameof(InventoryReturn.Id));
@@ -81,7 +81,7 @@ public static class ModelBuilderExtensions
 
         item.OwnsMany(x => x.Operations, operation =>
         {
-            operation.ToTable("inventory_operations", "warehouse");
+            operation.ToTable("warehouse_inventory_operations");
             operation.WithOwner().HasForeignKey("inventory_item_id");
             operation.Property<InventoryItemId>("inventory_item_id").HasConversion(new StronglyTypedIdConverter<InventoryItemId, int>(x => new InventoryItemId(x)));
             operation.HasKey("inventory_item_id", nameof(InventoryOperation.Id));

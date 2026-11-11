@@ -8,8 +8,8 @@ public sealed class IamDbContextFactory : IDesignTimeDbContextFactory<IamDbConte
     {
         var configuration = new ConfigurationBuilder().AddEnvironmentVariables().Build();
         var connection = configuration.GetConnectionString("DefaultConnection") ??
-            "Host=127.0.0.1;Port=54339;Database=ai_todu_shared;Username=postgres";
+            "Server=127.0.0.1;Port=3306;Database=ai_todu;User ID=ai_todu";
         return new IamDbContext(new DbContextOptionsBuilder<IamDbContext>()
-            .UseNpgsql(connection, x => x.MigrationsHistoryTable("__ef_migrations_history", "iam")).Options);
+            .UseMySQL(connection, x => x.MigrationsHistoryTable("__ef_iam_migrations")).Options);
     }
 }

@@ -7,7 +7,7 @@ using AiToDu.Platform.Warehouse.Domain.Model.Errors;
 using AiToDu.Platform.Warehouse.Domain.Model.ValueObjects;
 using AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCore.Configuration.Extensions;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
+using MySql.Data.MySqlClient;
 namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
 
 /// <summary>Warehouse integration extends the guide's unmodified shared context.</summary>
@@ -25,7 +25,7 @@ public sealed class WarehouseDbContext(DbContextOptions<WarehouseDbContext> opti
     {
         try { return await base.SaveChangesAsync(cancellationToken); }
         catch (DbUpdateConcurrencyException e) { throw new WarehousePersistenceConflictException(WarehouseErrorCode.VersionConflict,e); }
-        catch (DbUpdateException e) when (e.InnerException is PostgresException { SqlState: "23505" } pg)
-        { throw new WarehousePersistenceConflictException(pg.ConstraintName == "ux_inventory_items_organization_sku" ? WarehouseErrorCode.DuplicateSku : WarehouseErrorCode.PersistenceConflict,e); }
+        catch (DbUpdateException e) when (e.InnerException is MySqlException { Number: 1062 } duplicate)
+        { throw new WarehousePersistenceConflictException(duplicate.Message.Contains("ux_inventory_items_organization_sku", StringComparison.OrdinalIgnoreCase) ? WarehouseErrorCode.DuplicateSku : WarehouseErrorCode.PersistenceConflict,e); }
     }
 }

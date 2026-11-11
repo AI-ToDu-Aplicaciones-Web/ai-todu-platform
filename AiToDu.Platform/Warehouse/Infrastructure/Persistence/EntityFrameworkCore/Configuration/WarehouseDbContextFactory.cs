@@ -6,7 +6,7 @@ public sealed class WarehouseDbContextFactory : IDesignTimeDbContextFactory<Ware
     public WarehouseDbContext CreateDbContext(string[] args)
     {
         var configuration = new ConfigurationBuilder().AddEnvironmentVariables().Build();
-        var connection = configuration.GetConnectionString("DefaultConnection") ?? "Host=127.0.0.1;Port=54339;Database=ai_todu_shared;Username=postgres";
-        return new WarehouseDbContext(new DbContextOptionsBuilder<WarehouseDbContext>().UseNpgsql(connection, x => x.MigrationsHistoryTable("__ef_migrations_history","warehouse")).Options);
+        var connection = configuration.GetConnectionString("DefaultConnection") ?? "Server=127.0.0.1;Port=3306;Database=ai_todu;User ID=ai_todu";
+        return new WarehouseDbContext(new DbContextOptionsBuilder<WarehouseDbContext>().UseMySQL(connection, x => x.MigrationsHistoryTable("__ef_warehouse_migrations")).Options);
     }
 }

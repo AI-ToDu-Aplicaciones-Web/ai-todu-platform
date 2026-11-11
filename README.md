@@ -1,6 +1,6 @@
 # AI-ToDu Platform
 
-IAM and inventory services for Sprint 2, using C# 14, ASP.NET Core 10, Entity Framework Core and PostgreSQL. The solution follows the backend folder conventions in the supplied Learning Center Platform guides and preserves the original Shared implementations.
+IAM and inventory services for Sprint 2, using C# 14, ASP.NET Core 10, Entity Framework Core and MySQL 8. The solution follows the backend folder conventions in the supplied Learning Center Platform guides and preserves the original Shared implementations.
 
 ## Open the projects
 
@@ -10,7 +10,7 @@ IAM and inventory services for Sprint 2, using C# 14, ASP.NET Core 10, Entity Fr
 
 ## Start locally
 
-Create an empty PostgreSQL database for development, or use the existing corrected Warehouse database. Configure a random signing secret locally (at least 32 characters; never commit its value):
+Create an empty MySQL 8 database for development and grant the application user access to that database. These migrations initialize a MySQL schema; moving records from a former PostgreSQL installation requires a separate data import. Configure a random signing secret locally (at least 32 characters; never commit its value):
 
 ```powershell
 dotnet user-secrets set "Authentication:SigningKey" "YOUR_RANDOM_SECRET_AT_LEAST_32_CHARACTERS" --project AiToDu.Platform
@@ -20,7 +20,7 @@ On the original development computer this secret has already been configured out
 
 ```powershell
 $env:ASPNETCORE_ENVIRONMENT = 'Development'
-$env:ConnectionStrings__DefaultConnection = 'Host=localhost;Port=5432;Database=ai_todu_shared;Username=postgres;Password=YOUR_LOCAL_PASSWORD'
+$env:ConnectionStrings__DefaultConnection = 'Server=localhost;Port=3306;Database=ai_todu;User ID=ai_todu;Password=YOUR_LOCAL_PASSWORD'
 $env:Database__MigrateOnStartup = 'true'
 dotnet run --project AiToDu.Platform --no-launch-profile --urls http://localhost:5080
 ```

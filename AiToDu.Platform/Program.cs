@@ -59,9 +59,9 @@ builder.Services.AddDbContext<WarehouseDbContext>((services, options) =>
 {
     var configured = builder.Configuration.GetConnectionString("DefaultConnection");
     var connection = !string.IsNullOrWhiteSpace(configured) ? Environment.ExpandEnvironmentVariables(configured)
-        : builder.Environment.IsDevelopment() ? "Host=127.0.0.1;Port=54339;Database=ai_todu_shared;Username=postgres"
+        : builder.Environment.IsDevelopment() ? "Server=127.0.0.1;Port=3306;Database=ai_todu;User ID=ai_todu"
         : throw new InvalidOperationException("Database connection string is not set in the configuration.");
-    options.UseNpgsql(connection, database => database.MigrationsHistoryTable("__ef_migrations_history", "warehouse"))
+    options.UseMySQL(connection, database => database.MigrationsHistoryTable("__ef_warehouse_migrations"))
         .UseLoggerFactory(services.GetRequiredService<ILoggerFactory>())
         .AddInterceptors(services.GetRequiredService<DispatchDomainEventsInterceptor>())
         .EnableDetailedErrors();
@@ -79,9 +79,9 @@ builder.Services.AddCortexMediator([typeof(Program)]);
 builder.Services.AddDbContext<IamDbContext>(options =>
 {
     var connection = builder.Configuration.GetConnectionString("DefaultConnection") ??
-        (builder.Environment.IsDevelopment() ? "Host=127.0.0.1;Port=54339;Database=ai_todu_shared;Username=postgres"
+        (builder.Environment.IsDevelopment() ? "Server=127.0.0.1;Port=3306;Database=ai_todu;User ID=ai_todu"
         : throw new InvalidOperationException("Configure the database connection."));
-    options.UseNpgsql(Environment.ExpandEnvironmentVariables(connection), database => database.MigrationsHistoryTable("__ef_migrations_history", "iam"));
+    options.UseMySQL(Environment.ExpandEnvironmentVariables(connection), database => database.MigrationsHistoryTable("__ef_iam_migrations"));
 });
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<IHashingService, HashingService>();

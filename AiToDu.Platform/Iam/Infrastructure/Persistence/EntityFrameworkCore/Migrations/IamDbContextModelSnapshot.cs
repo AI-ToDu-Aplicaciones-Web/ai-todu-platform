@@ -4,7 +4,6 @@ using AiToDu.Platform.Iam.Infrastructure.Persistence.EntityFrameworkCore.Configu
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -18,84 +17,80 @@ namespace AiToDu.Platform.Iam.Infrastructure.Persistence.EntityFrameworkCore.Mig
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "10.0.14")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
-
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+                .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("AiToDu.Platform.Iam.Domain.Model.Aggregates.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
+                        .HasColumnType("int")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
                     b.Property<DateTimeOffset?>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("datetime")
                         .HasColumnName("created_at");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(254)
-                        .HasColumnType("character varying(254)")
+                        .HasColumnType("varchar(254)")
                         .HasColumnName("email");
 
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(160)
-                        .HasColumnType("character varying(160)")
+                        .HasColumnType("varchar(160)")
                         .HasColumnName("full_name");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
+                        .HasColumnType("tinyint(1)")
                         .HasColumnName("is_active");
 
                     b.Property<Guid>("OrganizationId")
-                        .HasColumnType("uuid")
+                        .HasColumnType("char(36)")
                         .HasColumnName("organization_id");
 
                     b.Property<string>("OrganizationName")
                         .IsRequired()
                         .HasMaxLength(160)
-                        .HasColumnType("character varying(160)")
+                        .HasColumnType("varchar(160)")
                         .HasColumnName("organization_name");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
+                        .HasColumnType("varchar(255)")
                         .HasColumnName("password_hash");
 
                     b.Property<Guid>("PublicId")
-                        .HasColumnType("uuid")
+                        .HasColumnType("char(36)")
                         .HasColumnName("public_id");
 
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasMaxLength(40)
-                        .HasColumnType("character varying(40)")
+                        .HasColumnType("varchar(40)")
                         .HasColumnName("role");
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
+                        .HasColumnType("datetime")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id")
-                        .HasName("p_k_users");
+                        .HasName("p_k_iam_users");
 
                     b.HasIndex("Email")
                         .IsUnique()
                         .HasDatabaseName("ux_users_email");
 
                     b.HasIndex("OrganizationId")
-                        .HasDatabaseName("i_x_users_organization_id");
+                        .HasDatabaseName("i_x_iam_users_organization_id");
 
                     b.HasIndex("PublicId")
                         .IsUnique()
-                        .HasDatabaseName("i_x_users_public_id");
+                        .HasDatabaseName("i_x_iam_users_public_id");
 
-                    b.ToTable("users", "iam");
+                    b.ToTable("iam_users", (string)null);
                 });
 #pragma warning restore 612, 618
         }

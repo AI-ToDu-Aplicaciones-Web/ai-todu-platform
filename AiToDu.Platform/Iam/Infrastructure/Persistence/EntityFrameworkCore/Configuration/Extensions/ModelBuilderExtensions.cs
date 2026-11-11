@@ -9,7 +9,7 @@ public static class ModelBuilderExtensions
     public static void ApplyIamConfiguration(this ModelBuilder builder)
     {
         var user = builder.Entity<User>();
-        user.ToTable("users", "iam");
+        user.ToTable("iam_users");
         user.HasKey(x => x.Id);
         user.Property(x => x.Id).HasConversion(new StronglyTypedIdConverter<UserId, int>(x => new UserId(x))).ValueGeneratedOnAdd();
         user.Property(x => x.Email).HasConversion(x => x.Value, x => new EmailAddress(x)).HasMaxLength(254).IsRequired();

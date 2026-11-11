@@ -156,8 +156,10 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
                         .HasColumnName("request_hash");
 
                     b.Property<string>("Status")
+                        .IsConcurrencyToken()
                         .IsRequired()
-                        .HasColumnType("longtext")
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)")
                         .HasColumnName("status");
 
                     b.Property<decimal>("Total")
@@ -258,6 +260,33 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
                         .HasDatabaseName("ux_inventory_items_organization_sku");
 
                     b.ToTable("warehouse_inventory_items", (string)null);
+                });
+
+            modelBuilder.Entity("AiToDu.Platform.Warehouse.Domain.Model.Entities.AdjustmentReason", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("organization_id");
+
+                    b.HasKey("Id")
+                        .HasName("p_k_warehouse_adjustment_reasons");
+
+                    b.HasIndex("OrganizationId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("ux_org_adjustment_reason");
+
+                    b.ToTable("warehouse_adjustment_reasons", (string)null);
                 });
 
             modelBuilder.Entity("AiToDu.Platform.Sales.Domain.Model.Sale", b =>
@@ -584,7 +613,7 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
                                 .HasColumnType("varchar(64)")
                                 .HasColumnName("code");
 
-                            b1.Property<DateOnly?>("ExpiresOn")
+                            b1.Property<DateTime?>("ExpiresOn")
                                 .HasColumnType("date")
                                 .HasColumnName("expires_on");
 

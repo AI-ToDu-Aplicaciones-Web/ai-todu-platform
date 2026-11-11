@@ -1,4 +1,4 @@
-using AiToDu.Platform.Subscriptions.Infrastructure;
+using AiToDu.Platform.Subscriptions.Application;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -9,7 +9,7 @@ public sealed class PlanAllocationAttribute(string resource) : Attribute, IAsync
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        var service = context.HttpContext.RequestServices.GetRequiredService<SubscriptionService>();
+        var service = context.HttpContext.RequestServices.GetRequiredService<ISubscriptionService>();
         var ct = context.HttpContext.RequestAborted;
         bool locked = await service.WithLock(async () => {
             var plan = await service.Current(ct);

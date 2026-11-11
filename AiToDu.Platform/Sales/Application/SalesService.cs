@@ -61,6 +61,38 @@ public sealed class SalesService(ISalesRepository repository, IWarehouseContextF
         }, ct);
     }
 
+    public Task<Sale> Cancel(Guid saleId, CancellationToken ct) => repository.Atomic(async () => {
+        var sale = await repository.FindSale(saleId, ct) ?? throw new SalesError("Unknown sale.", 404);
+        if (!sale.Cancel()) throw new SalesError("Return paid merchandise using its receipt.");
+        return sale;
+    }, ct);
+
+    public Task<Sale> Pay(Guid saleId, string reference, CancellationToken ct) => repository.Atomic(async () => {
+        if (string.IsNullOrWhiteSpace(reference) || reference.Length > 160) throw new SalesError("Invalid payment reference.", 400);
+        var sale = await repository.FindSale(saleId, ct) ?? throw new SalesError("Unknown sale.", 404);
+        if (sale.Status == "Paid") return sale.PaymentReference == reference.Trim() ? sale : throw new SalesError("Payment already recorded.");
+        if (sale.Status != "Pending") throw new SalesError("Cancelled sale.");
+        foreach (var group in sale.Lines.GroupBy(x => x.ItemId).OrderBy(x => x.Key))
+        {
+            var quote = await warehouse.Quote(group.Key, ct) ?? throw new SalesError("Product unavailable.");
+            var version = quote.Version;
+            foreach (var line in group)
+                if (!await warehouse.IssueForSale(line.ItemId, line.LotId, Guid.NewGuid(), version++, line.Quantity, sale.Id.ToString(), ct))
+                    throw new SalesError("Stock is unavailable.");
+        }
+        sale.RecordPayment(true, reference.Trim());
+        return sale;
+    }, ct);
+
+    public async Task ReturnByReceipt(int itemId, Guid lot, Guid operation, string reference, decimal quantity, string disposition, string reason, CancellationToken ct)
+    {
+        if (!Guid.TryParse(reference?.Replace("AT-", "", StringComparison.OrdinalIgnoreCase), out var id))
+            throw new SalesError("Enter a valid sale receipt.", 400);
+        var sale = await repository.FindSale(id, ct) ?? throw new SalesError("Unknown sale.", 404);
+        var line = sale.Lines.SingleOrDefault(x => x.ItemId == itemId && x.LotId == lot) ?? throw new SalesError("Lot is not part of this sale.");
+        await Return(id, new(operation, line.Id, quantity, disposition, reason), ct);
+    }
+
     public Task<Sale> Return(Guid saleId, ReturnRequest request, CancellationToken ct) => repository.Atomic(async () => {
         if (request.OperationId == Guid.Empty || string.IsNullOrWhiteSpace(request.Reason) || request.Reason.Length > 160 ||
             request.Disposition is not ("Restock" or "Quarantine" or "Rejected")) throw new SalesError("Invalid return.", 400);

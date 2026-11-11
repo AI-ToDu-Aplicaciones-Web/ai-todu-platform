@@ -9,6 +9,7 @@ namespace AiToDu.Platform.Warehouse.Application.Internal.QueryServices;
 
 public sealed class InventoryItemQueryService(IInventoryItemRepository repository, ICurrentWarehouseActor actor) : IInventoryItemQueryService
 {
+    public Task<InventoryItem?> FindBySku(string sku, CancellationToken ct) => repository.FindBySku(actor.OrganizationId, new Sku(sku), ct);
     public Task<InventoryItem?> Handle(GetInventoryItemByIdQuery query, CancellationToken ct) =>
         repository.FindAsync(actor.OrganizationId, query.ItemId, false, ct);
     public Task<(IReadOnlyList<InventoryItem> Items, int Total)> Handle(GetInventoryItemsQuery query, CancellationToken ct)

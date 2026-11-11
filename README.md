@@ -1,6 +1,6 @@
 # AI-ToDu Platform
 
-IAM and inventory services for Sprint 2, using C# 14, ASP.NET Core 10, Entity Framework Core and MySQL 8. The solution follows the backend folder conventions in the supplied Learning Center Platform guides and preserves the original Shared implementations.
+Identity, inventory and commercial services for Sprint 2, using C# 14, ASP.NET Core 10, Entity Framework Core and MySQL 8. The solution follows the backend folder conventions in the supplied Learning Center Platform guides and preserves the original Shared implementations.
 
 ## Open the projects
 
@@ -138,7 +138,25 @@ Stock precision is three decimal places; prices have two. Negative inputs are re
 
 ## Integrating Sales and IAM
 
-`IWarehouseContextFacade` exposes primitive identifiers and availability/issue operations; another context must not reference Warehouse entities or repositories. The issue operation has its own Sales policy: an authenticated sales clerk or business owner may issue through that internal use case without receiving general warehouse-adjustment permissions. It has no general HTTP write endpoint. The issue operation is idempotent by its operation reference. It commits a **Warehouse transaction**; it does not make a Sales transaction atomic across contexts. Sales should coordinate its own state and reliable integration events/compensation instead of updating stock from the browser before saving a sale. Do not deduct the same sale again at dispatch.
+Sales opens a MySQL transaction on the shared operational connection and calls the Warehouse application facade to allocate available lots in expiry order. A failed line rolls back all writes. An accepted payment records a receipt; a rejected payment leaves the order pending. Retrying the same checkout reference and payload returns its original result. Returns use the original sale line and its lot.
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| GET / POST | /api/v1/customers | Search or register customers |
+| GET / POST | /api/v1/transactions | Filter history with from/to or submit a cart |
+| GET | /api/v1/transactions/{id} | Sale detail |
+| POST | /api/v1/transactions/{id}/payment or /cancel | Record payment or cancel a pending sale |
+| GET | /api/v1/transactions/{id}/receipt | Confirmed receipt |
+| POST | /api/v1/transactions/{id}/returns | Record a justified, classified return |
+| PATCH | /api/v1/users/{id}/access | Set staff role and module permissions |
+| GET / PUT | /api/v1/subscription | Read or select the organization plan |
+| GET / POST | /api/v1/adjustment-reasons | Consult or register an adjustment reason |
+| GET | /api/v1/inventory-items/by-sku/{sku} | Exact SKU lookup |
+| GET | /api/v1/audit | Latest 200 authenticated successful write requests |
+| GET | /api/v1/notifications | Stock and expiry alerts, including read state |
+| PUT | /api/v1/notifications/{key}/read | Mark an alert read for the current user |
+
+Starter includes 3 user accounts and 500 SKUs. Growth permits 10 user accounts and unlimited SKUs. Enterprise has unlimited accounts and SKUs. New organizations start with Starter. Registration and plan changes are serialized per organization. Stock alerts appear at or below the minimum; expiry alerts include lots with remaining stock expiring within 30 days and overdue lots.
 
 Authentication/token issuance belongs to the implemented IAM context. The frontend reads its JWT from `aitodu_token` in session storage, validates the restored session through `/authentication/me`, and clears inventory snapshots when the account changes. There is no development or production authentication bypass.
 

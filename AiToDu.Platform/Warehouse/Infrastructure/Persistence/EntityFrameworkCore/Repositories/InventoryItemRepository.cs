@@ -17,6 +17,8 @@ public sealed class InventoryItemRepository(AppDbContext context) : BaseReposito
         if (!tracking) query = query.AsNoTracking();
         return Complete(query).SingleOrDefaultAsync(ct);
     }
+    public Task<InventoryItem?> FindBySku(OrganizationId organizationId, Sku sku, CancellationToken ct) =>
+        Complete(Context.Set<InventoryItem>().AsNoTracking()).SingleOrDefaultAsync(x => x.OrganizationId == organizationId && x.Sku == sku, ct);
     public Task<bool> SkuExistsAsync(OrganizationId organizationId, Sku sku, CancellationToken ct) => Context.Set<InventoryItem>().AnyAsync(x => x.OrganizationId == organizationId && x.Sku == sku, ct);
     public async Task<(IReadOnlyList<InventoryItem> Items, int Total)> SearchAsync(OrganizationId organizationId, string? search, int page, int pageSize, CancellationToken ct)
     {

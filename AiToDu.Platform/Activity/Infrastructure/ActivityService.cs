@@ -24,7 +24,7 @@ public sealed class ReadMapping : IEntityTypeConfiguration<NotificationRead>
     }
 }
 
-public sealed class ActivityService(AppDbContext db, ICurrentWarehouseActor actor, IWarehouseClock clock)
+public sealed class ActivityService(AppDbContext db, ICurrentWarehouseActor actor, IWarehouseClock clock) : Application.IActivityService
 {
     public async Task<List<StockAlert>> Alerts(CancellationToken ct)
     {

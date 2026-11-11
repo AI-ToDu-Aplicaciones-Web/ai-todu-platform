@@ -33,6 +33,17 @@ public sealed class InventoryItemsController(IInventoryItemCommandService comman
         var result = await queries.Handle(new GetInventoryItemsQuery(search, page, pageSize), ct);
         return Ok(new InventoryPageResource(result.Items.Select(x => InventoryItemResourceFromEntityAssembler.ToResourceFromEntity(x, Today)).ToList(), result.Total, page, pageSize));
     }
+    [HttpGet("by-sku/{sku}")]
+    public async Task<IActionResult> BySku(string sku, CancellationToken ct)
+    {
+        try
+        {
+            var item = await queries.FindBySku(sku, ct);
+            return item is null ? Problem(statusCode:404, detail:"Unknown SKU.") : Ok(InventoryItemResourceFromEntityAssembler.ToResourceFromEntity(item, Today));
+        }
+        catch (WarehouseDomainException) { return Problem(statusCode:400, detail:"Invalid SKU."); }
+    }
+
     [HttpGet("{id:int:min(1)}")]
     [ProducesResponseType<InventoryItemResource>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetById(int id, CancellationToken ct)
@@ -71,8 +82,11 @@ public sealed class InventoryItemsController(IInventoryItemCommandService comman
     [HttpPost("{id:int:min(1)}/returns")]
     [ProducesResponseType<InventoryItemResource>(StatusCodes.Status200OK)]
     [Authorize(Policy = "inventory.write")]
-    public async Task<IActionResult> Return(int id, [FromBody] ClassifyInventoryReturnResource resource, CancellationToken ct) =>
-        InventoryActionResultAssembler.ToActionResult(this, await commands.Handle(ClassifyInventoryReturnCommandFromResourceAssembler.ToCommandFromResource(id, resource), ct), Today, messages, problemDetailsFactory, false);
+    public async Task<IActionResult> Return(int id, [FromBody] ClassifyInventoryReturnResource resource, [FromServices] AiToDu.Platform.Sales.Application.SalesService sales, CancellationToken ct)
+    {
+        await sales.ReturnByReceipt(id, resource.SourceLotId, resource.OperationId, resource.Reference, resource.Quantity, resource.Disposition.ToString(), resource.Reason, ct);
+        return await GetById(id, ct);
+    }
 
     [HttpPatch("{id:int:min(1)}/lots/{lotId:guid}/quarantine")]
     [ProducesResponseType<InventoryItemResource>(StatusCodes.Status200OK)]

@@ -18,7 +18,7 @@ public sealed class SubscriptionMapping : IEntityTypeConfiguration<Subscription>
     }
 }
 
-public sealed class SubscriptionService(AppDbContext db, IamDbContext iam, ICurrentWarehouseActor actor)
+public sealed class SubscriptionService(AppDbContext db, IamDbContext iam, ICurrentWarehouseActor actor) : Application.ISubscriptionService
 {
     private Guid Organization => actor.OrganizationId.Value;
     public async Task<Subscription> Current(CancellationToken ct) =>

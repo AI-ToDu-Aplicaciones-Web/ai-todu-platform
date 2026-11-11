@@ -32,6 +32,9 @@ public static class ModelBuilderExtensions
             lot.Property(x => x.Id).HasConversion(new StronglyTypedIdConverter<StockLotId, Guid>(x => new StockLotId(x)));
             lot.Property(x => x.Code).HasConversion(x => x.Value, x => new LotCode(x)).HasMaxLength(64);
             lot.Property(x => x.Location).HasConversion(x => x.Value, x => new StorageLocation(x)).HasMaxLength(120);
+            lot.Property(x => x.ExpiresOn).HasConversion(
+                value => value.HasValue ? value.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null,
+                value => value.HasValue ? DateOnly.FromDateTime(value.Value) : (DateOnly?)null).HasColumnType("date");
             lot.Property(x => x.Quantity).HasConversion(x => x.Value, x => new StockQuantity(x)).HasPrecision(18, 3);
             lot.HasIndex("inventory_item_id", nameof(StockLot.Code), nameof(StockLot.Location)).IsUnique();
         });

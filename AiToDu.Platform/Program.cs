@@ -45,8 +45,8 @@ using ProblemDetailsFactory = AiToDu.Platform.Shared.Interfaces.Rest.ProblemDeta
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
-builder.Services.AddScoped<AiToDu.Platform.Activity.Infrastructure.ActivityService>();
-builder.Services.AddScoped<AiToDu.Platform.Subscriptions.Infrastructure.SubscriptionService>();
+builder.Services.AddScoped<AiToDu.Platform.Activity.Application.IActivityService, AiToDu.Platform.Activity.Infrastructure.ActivityService>();
+builder.Services.AddScoped<AiToDu.Platform.Subscriptions.Application.ISubscriptionService, AiToDu.Platform.Subscriptions.Infrastructure.SubscriptionService>();
 builder.Services.AddControllers(options => {
     options.Conventions.Add(new KebabCaseRouteNamingConvention());
     options.Filters.Add<AiToDu.Platform.Activity.Interfaces.Rest.AuditFilter>();
@@ -56,6 +56,8 @@ builder.Services.AddControllers(options => {
 builder.Services.AddProblemDetails();
 builder.Services.AddScoped<AiToDu.Platform.Sales.Infrastructure.Persistence.SalesRepository>();
 builder.Services.AddScoped<AiToDu.Platform.Sales.Application.ISalesRepository>(sp => sp.GetRequiredService<AiToDu.Platform.Sales.Infrastructure.Persistence.SalesRepository>());
+builder.Services.AddScoped<AiToDu.Platform.Sales.Application.ISalesDirectory>(sp => sp.GetRequiredService<AiToDu.Platform.Sales.Infrastructure.Persistence.SalesRepository>());
+builder.Services.AddScoped<IAdjustmentReasons, AdjustmentReasons>();
 builder.Services.AddScoped<AiToDu.Platform.Sales.Application.SalesService>();
 builder.Services.AddExceptionHandler<AiToDu.Platform.Sales.Interfaces.Rest.SalesErrorHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -138,6 +140,7 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     SupportedCultures = [new CultureInfo("en-US"), new CultureInfo("es-419")],
     SupportedUICultures = [new CultureInfo("en"), new CultureInfo("es")]
 });
+app.UseStatusCodePages();
 app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();

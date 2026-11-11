@@ -43,9 +43,16 @@ public sealed class Sale
         Total += line.Amount;
     }
 
+    public bool Cancel()
+    {
+        if (Status == "Paid") return false;
+        Status = "Cancelled";
+        return true;
+    }
+
     public void RecordPayment(bool accepted, string reference)
     {
-        if (_lines.Count == 0 || Status == "Paid") throw new InvalidOperationException("Invalid payment state.");
+        if (_lines.Count == 0 || Status != "Pending") throw new InvalidOperationException("Invalid payment state.");
         PaymentReference = reference;
         if (!accepted) return;
         Status = "Paid";

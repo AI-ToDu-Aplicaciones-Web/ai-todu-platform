@@ -11,6 +11,7 @@ public sealed class SaleMapping : IEntityTypeConfiguration<Sale>
         sale.ToTable("sales_orders");
         sale.HasKey(x => x.Id);
         sale.HasIndex(x => new { x.OrganizationId, x.OperationId }).IsUnique().HasDatabaseName("ux_sale_operation");
+        sale.Property(x => x.Status).HasMaxLength(16).IsConcurrencyToken();
         sale.Property(x => x.Total).HasPrecision(18, 2);
         sale.OwnsMany(x => x.Lines, line => {
             line.ToTable("sales_lines");

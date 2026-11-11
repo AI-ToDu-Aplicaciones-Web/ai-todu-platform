@@ -6,6 +6,7 @@ namespace AiToDu.Platform.Warehouse.Application.CommandServices;
 
 public interface IInventoryItemCommandService
 {
+    Task<Result<InventoryItem>> HandleSaleReturn(ClassifyInventoryReturnCommand command, CancellationToken ct);
     Task<Result<InventoryItem>> Handle(IssueStockForSaleCommand command, CancellationToken ct);
     Task<Result<InventoryItem>> Handle(CreateInventoryItemCommand command, CancellationToken ct);
     Task<Result<InventoryItem>> Handle(ReceiveStockLotCommand command, CancellationToken ct);

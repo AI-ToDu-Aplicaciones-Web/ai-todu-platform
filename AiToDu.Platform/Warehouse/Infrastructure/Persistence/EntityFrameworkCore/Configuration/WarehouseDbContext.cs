@@ -18,6 +18,7 @@ public sealed class WarehouseDbContext(DbContextOptions<WarehouseDbContext> opti
     {
         base.OnModelCreating(builder);
         builder.ApplyWarehouseConfiguration();
+        builder.ApplyConfigurationsFromAssembly(typeof(WarehouseDbContext).Assembly);
         builder.Entity<InventoryItem>().HasQueryFilter(item => item.OrganizationId == CurrentOrganizationId);
         builder.UseSnakeCaseNamingConvention();
     }

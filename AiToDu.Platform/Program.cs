@@ -49,6 +49,10 @@ builder.Services.AddControllers(options => options.Conventions.Add(new KebabCase
     .AddDataAnnotationsLocalization()
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddProblemDetails();
+builder.Services.AddScoped<AiToDu.Platform.Sales.Infrastructure.Persistence.SalesRepository>();
+builder.Services.AddScoped<AiToDu.Platform.Sales.Application.ISalesRepository>(sp => sp.GetRequiredService<AiToDu.Platform.Sales.Infrastructure.Persistence.SalesRepository>());
+builder.Services.AddScoped<AiToDu.Platform.Sales.Application.SalesService>();
+builder.Services.AddExceptionHandler<AiToDu.Platform.Sales.Interfaces.Rest.SalesErrorHandler>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddLocalization();
 builder.Services.AddSingleton<IStringLocalizer<ErrorMessages>, StringLocalizer<ErrorMessages>>();

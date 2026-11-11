@@ -19,6 +19,99 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
                 .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
+            modelBuilder.Entity("AiToDu.Platform.Sales.Domain.Model.Customer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("varchar(160)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("organization_id");
+
+                    b.HasKey("Id")
+                        .HasName("p_k_sales_customers");
+
+                    b.HasIndex("OrganizationId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("ux_customer_name");
+
+                    b.ToTable("sales_customers", (string)null);
+                });
+
+            modelBuilder.Entity("AiToDu.Platform.Sales.Domain.Model.Sale", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ActorId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("actor_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("customer_id");
+
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("customer_name");
+
+                    b.Property<Guid>("OperationId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("operation_id");
+
+                    b.Property<Guid>("OrganizationId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("organization_id");
+
+                    b.Property<string>("PaymentReference")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("payment_reference");
+
+                    b.Property<string>("Receipt")
+                        .HasColumnType("longtext")
+                        .HasColumnName("receipt");
+
+                    b.Property<string>("RequestHash")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("request_hash");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("status");
+
+                    b.Property<decimal>("Total")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("total");
+
+                    b.HasKey("Id")
+                        .HasName("p_k_sales_orders");
+
+                    b.HasIndex("OrganizationId", "OperationId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_sale_operation");
+
+                    b.ToTable("sales_orders", (string)null);
+                });
+
             modelBuilder.Entity("AiToDu.Platform.Warehouse.Domain.Model.Aggregates.InventoryItem", b =>
                 {
                     b.Property<int>("Id")
@@ -79,6 +172,115 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
                         .HasDatabaseName("ux_inventory_items_organization_sku");
 
                     b.ToTable("warehouse_inventory_items", (string)null);
+                });
+
+            modelBuilder.Entity("AiToDu.Platform.Sales.Domain.Model.Sale", b =>
+                {
+                    b.OwnsMany("AiToDu.Platform.Sales.Domain.Model.SaleLine", "Lines", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .HasColumnType("char(36)")
+                                .HasColumnName("id");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("decimal(18,2)")
+                                .HasColumnName("amount");
+
+                            b1.Property<int>("ItemId")
+                                .HasColumnType("int")
+                                .HasColumnName("item_id");
+
+                            b1.Property<Guid>("LotId")
+                                .HasColumnType("char(36)")
+                                .HasColumnName("lot_id");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasColumnType("longtext")
+                                .HasColumnName("name");
+
+                            b1.Property<decimal>("Quantity")
+                                .HasPrecision(18, 3)
+                                .HasColumnType("decimal(18,3)")
+                                .HasColumnName("quantity");
+
+                            b1.Property<decimal>("Returned")
+                                .IsConcurrencyToken()
+                                .HasPrecision(18, 3)
+                                .HasColumnType("decimal(18,3)")
+                                .HasColumnName("returned");
+
+                            b1.Property<string>("Sku")
+                                .IsRequired()
+                                .HasColumnType("longtext")
+                                .HasColumnName("sku");
+
+                            b1.Property<decimal>("UnitPrice")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("decimal(18,2)")
+                                .HasColumnName("unit_price");
+
+                            b1.Property<Guid>("sale_id")
+                                .HasColumnType("char(36)")
+                                .HasColumnName("sale_id");
+
+                            b1.HasKey("Id")
+                                .HasName("p_k_sales_lines");
+
+                            b1.HasIndex("sale_id")
+                                .HasDatabaseName("i_x_sales_lines_sale_id");
+
+                            b1.ToTable("sales_lines", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("sale_id")
+                                .HasConstraintName("fk_line_sale");
+                        });
+
+                    b.OwnsMany("AiToDu.Platform.Sales.Domain.Model.SaleReturn", "Returns", b1 =>
+                        {
+                            b1.Property<Guid>("sale_id")
+                                .HasColumnType("char(36)")
+                                .HasColumnName("sale_id");
+
+                            b1.Property<Guid>("OperationId")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("char(36)")
+                                .HasColumnName("operation_id");
+
+                            b1.Property<string>("Disposition")
+                                .IsRequired()
+                                .HasColumnType("longtext")
+                                .HasColumnName("disposition");
+
+                            b1.Property<Guid>("LineId")
+                                .HasColumnType("char(36)")
+                                .HasColumnName("line_id");
+
+                            b1.Property<decimal>("Quantity")
+                                .HasPrecision(18, 3)
+                                .HasColumnType("decimal(18,3)")
+                                .HasColumnName("quantity");
+
+                            b1.Property<string>("Reason")
+                                .IsRequired()
+                                .HasColumnType("longtext")
+                                .HasColumnName("reason");
+
+                            b1.HasKey("sale_id", "OperationId")
+                                .HasName("p_k_sales_returns");
+
+                            b1.ToTable("sales_returns", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("sale_id")
+                                .HasConstraintName("fk_return_sale");
+                        });
+
+                    b.Navigation("Lines");
+
+                    b.Navigation("Returns");
                 });
 
             modelBuilder.Entity("AiToDu.Platform.Warehouse.Domain.Model.Aggregates.InventoryItem", b =>

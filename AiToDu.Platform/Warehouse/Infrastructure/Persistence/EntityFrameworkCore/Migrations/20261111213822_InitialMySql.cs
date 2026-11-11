@@ -57,7 +57,7 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
                 {
                     table.PrimaryKey("p_k_warehouse_inventory_movements", x => new { x.inventory_item_id, x.id });
                     table.ForeignKey(
-                        name: "f_k_warehouse_inventory_movements_warehouse_inventory_items_inve~",
+                        name: "fk_movement_item",
                         column: x => x.inventory_item_id,
                         principalTable: "warehouse_inventory_items",
                         principalColumn: "id",
@@ -77,7 +77,7 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
                 {
                     table.PrimaryKey("p_k_warehouse_inventory_operations", x => new { x.inventory_item_id, x.id });
                     table.ForeignKey(
-                        name: "f_k_warehouse_inventory_operations_warehouse_inventory_items_inv~",
+                        name: "fk_operation_item",
                         column: x => x.inventory_item_id,
                         principalTable: "warehouse_inventory_items",
                         principalColumn: "id",
@@ -105,7 +105,7 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
                 {
                     table.PrimaryKey("p_k_warehouse_inventory_returns", x => new { x.inventory_item_id, x.id });
                     table.ForeignKey(
-                        name: "f_k_warehouse_inventory_returns_warehouse_inventory_items_invent~",
+                        name: "fk_returned_item",
                         column: x => x.inventory_item_id,
                         principalTable: "warehouse_inventory_items",
                         principalColumn: "id",
@@ -131,7 +131,7 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
                 {
                     table.PrimaryKey("p_k_warehouse_stock_counts", x => new { x.inventory_item_id, x.id });
                     table.ForeignKey(
-                        name: "f_k_warehouse_stock_counts_warehouse_inventory_items_inventory_i~",
+                        name: "fk_count_item",
                         column: x => x.inventory_item_id,
                         principalTable: "warehouse_inventory_items",
                         principalColumn: "id",
@@ -155,7 +155,7 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
                 {
                     table.PrimaryKey("p_k_warehouse_stock_lots", x => new { x.inventory_item_id, x.id });
                     table.ForeignKey(
-                        name: "f_k_warehouse_stock_lots_warehouse_inventory_items_inventory_ite~",
+                        name: "fk_lot_item",
                         column: x => x.inventory_item_id,
                         principalTable: "warehouse_inventory_items",
                         principalColumn: "id",

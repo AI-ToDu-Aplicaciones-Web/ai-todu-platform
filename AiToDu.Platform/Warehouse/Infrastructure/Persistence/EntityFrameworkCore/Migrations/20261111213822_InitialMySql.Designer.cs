@@ -144,7 +144,7 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
 
                             b1.WithOwner()
                                 .HasForeignKey("inventory_item_id")
-                                .HasConstraintName("f_k_warehouse_inventory_movements_warehouse_inventory_items_inve~");
+                                .HasConstraintName("fk_movement_item");
                         });
 
                     b.OwnsMany("AiToDu.Platform.Warehouse.Domain.Model.Entities.InventoryOperation", "Operations", b1 =>
@@ -169,7 +169,7 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
 
                             b1.WithOwner()
                                 .HasForeignKey("inventory_item_id")
-                                .HasConstraintName("f_k_warehouse_inventory_operations_warehouse_inventory_items_inv~");
+                                .HasConstraintName("fk_operation_item");
                         });
 
                     b.OwnsMany("AiToDu.Platform.Warehouse.Domain.Model.Entities.InventoryReturn", "Returns", b1 =>
@@ -229,7 +229,7 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
 
                             b1.WithOwner()
                                 .HasForeignKey("inventory_item_id")
-                                .HasConstraintName("f_k_warehouse_inventory_returns_warehouse_inventory_items_invent~");
+                                .HasConstraintName("fk_returned_item");
                         });
 
                     b.OwnsMany("AiToDu.Platform.Warehouse.Domain.Model.Entities.StockCount", "Counts", b1 =>
@@ -280,7 +280,7 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
 
                             b1.WithOwner()
                                 .HasForeignKey("inventory_item_id")
-                                .HasConstraintName("f_k_warehouse_stock_counts_warehouse_inventory_items_inventory_i~");
+                                .HasConstraintName("fk_count_item");
                         });
 
                     b.OwnsMany("AiToDu.Platform.Warehouse.Domain.Model.Entities.StockLot", "Lots", b1 =>
@@ -329,7 +329,7 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
 
                             b1.WithOwner()
                                 .HasForeignKey("inventory_item_id")
-                                .HasConstraintName("f_k_warehouse_stock_lots_warehouse_inventory_items_inventory_ite~");
+                                .HasConstraintName("fk_lot_item");
                         });
 
                     b.Navigation("Counts");

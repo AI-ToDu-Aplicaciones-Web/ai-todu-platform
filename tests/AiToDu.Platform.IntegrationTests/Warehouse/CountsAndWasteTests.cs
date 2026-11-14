@@ -1,0 +1,58 @@
+using System.Net;
+using AiToDu.Platform.IntegrationTests.Infrastructure;
+using AiToDu.Platform.Warehouse.Domain.Model.ValueObjects;
+using AiToDu.Platform.Warehouse.Interfaces.Rest.Resources;
+
+namespace AiToDu.Platform.IntegrationTests.Warehouse;
+
+/// <summary>S2-04: physical counts, adjustments and justified waste, with movement consistency.</summary>
+[Collection(ApiCollection.Name)]
+public sealed class CountsAndWasteTests(AiToDuApiFactory factory)
+{
+    [Fact(DisplayName = "S2-04 · Conteo de 8 y merma de 1 sobre 10 dejan saldo 7, con sus movimientos, y se rechaza una versión antigua")]
+    public async Task CountAndWaste_LeaveSevenAndRejectStaleVersion()
+    {
+        var api = await ApiSession.SignUpOwnerAsync(factory, "Bodega Conteos");
+        var item = await api.CreateItem(ApiSession.NewSku("CONT"));
+        item = await api.Receive(item, "L-010", "A-01", 10, null);
+        var lot = Assert.Single(item.Lots);
+        var versionAfterReceipt = item.Version;
+
+        var countOperation = Guid.NewGuid();
+        item = await ApiSession.Read<InventoryItemResource>(await api.TryCount(item.Id,
+            new RegisterStockCountResource(countOperation, item.Version, lot.Id, 10, 8, "Conteo físico mensual")), HttpStatusCode.OK);
+        Assert.Equal(8m, item.TotalQuantity);
+
+        var wasteOperation = Guid.NewGuid();
+        item = await ApiSession.Read<InventoryItemResource>(await api.TryMovement(item.Id,
+            new RecordInventoryMovementResource(wasteOperation, item.Version, lot.Id, MovementType.Waste, 1, "Botella rota en anaquel")), HttpStatusCode.OK);
+        Assert.Equal(7m, item.TotalQuantity);
+
+        // An update built from an old version must be rejected and must not touch the stock.
+        var stale = await api.TryMovement(item.Id, new RecordInventoryMovementResource(
+            Guid.NewGuid(), versionAfterReceipt, lot.Id, MovementType.Waste, 1, "Merma con versión antigua"));
+        await ApiSession.ExpectStatus(stale, HttpStatusCode.Conflict);
+
+        var reloaded = await api.GetItem(item.Id);
+        Assert.Equal(item.Version, reloaded.Version);
+        Assert.Equal(7m, reloaded.TotalQuantity);
+        Assert.Equal(7m, reloaded.AvailableQuantity);
+        Assert.Equal(7m, Assert.Single(reloaded.Lots).Quantity);
+
+        var count = Assert.Single(reloaded.Counts);
+        Assert.Equal(10m, count.ExpectedQuantity);
+        Assert.Equal(8m, count.CountedQuantity);
+
+        Assert.Equal(3, reloaded.Movements.Count);
+        var receipt = Assert.Single(reloaded.Movements, x => x.Type == nameof(MovementType.Receipt));
+        Assert.Equal((0m, 10m), (receipt.Before, receipt.After));
+        var countAdjustment = Assert.Single(reloaded.Movements, x => x.Type == nameof(MovementType.CountAdjustment));
+        Assert.Equal((10m, 8m, -2m), (countAdjustment.Before, countAdjustment.After, countAdjustment.Change));
+        Assert.Equal(countOperation, countAdjustment.OperationId);
+        var waste = Assert.Single(reloaded.Movements, x => x.Type == nameof(MovementType.Waste));
+        Assert.Equal((8m, 7m, -1m), (waste.Before, waste.After, waste.Change));
+        Assert.Equal(wasteOperation, waste.OperationId);
+        Assert.Equal("Botella rota en anaquel", waste.Reason);
+        Assert.All(reloaded.Movements, x => Assert.Equal(lot.Id, x.LotId));
+    }
+}

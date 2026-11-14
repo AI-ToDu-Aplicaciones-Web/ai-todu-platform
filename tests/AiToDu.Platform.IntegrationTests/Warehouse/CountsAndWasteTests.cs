@@ -55,4 +55,22 @@ public sealed class CountsAndWasteTests(AiToDuApiFactory factory)
         Assert.Equal("Botella rota en anaquel", waste.Reason);
         Assert.All(reloaded.Movements, x => Assert.Equal(lot.Id, x.LotId));
     }
+
+    [Fact(DisplayName = "S2-04 · Reintentar la misma merma no descuenta dos veces; reutilizar su operationId con otros datos se rechaza")]
+    public async Task RetriedWaste_IsAppliedOnce()
+    {
+        var api = await ApiSession.SignUpOwnerAsync(factory, "Bodega Reintentos");
+        var item = await api.CreateItem(ApiSession.NewSku("REIN"));
+        item = await api.Receive(item, "L-020", "A-01", 10, null);
+        var lot = Assert.Single(item.Lots);
+
+        var waste = new RecordInventoryMovementResource(Guid.NewGuid(), item.Version, lot.Id, MovementType.Waste, 1, "Producto vencido en tienda");
+        await ApiSession.ExpectStatus(await api.TryMovement(item.Id, waste), HttpStatusCode.OK);
+        await ApiSession.ExpectStatus(await api.TryMovement(item.Id, waste), HttpStatusCode.OK);
+        await ApiSession.ExpectStatus(await api.TryMovement(item.Id, waste with { Quantity = 2 }), HttpStatusCode.Conflict);
+
+        var reloaded = await api.GetItem(item.Id);
+        Assert.Equal(9m, reloaded.TotalQuantity);
+        Assert.Single(reloaded.Movements, x => x.Type == nameof(MovementType.Waste));
+    }
 }

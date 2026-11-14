@@ -143,4 +143,22 @@ public sealed class LotLifecycleTests(AiToDuApiFactory factory)
         var reloaded = await api.GetItem(item.Id);
         Assert.Equal(10m, Assert.Single(reloaded.Lots).Quantity);
     }
+
+    [Fact(DisplayName = "S2-03 · No se puede mover un lote a una ubicación donde ya está ese mismo lote")]
+    public async Task RelocatingOntoSameLotCode_IsRejected()
+    {
+        var api = await ApiSession.SignUpOwnerAsync(factory, "Bodega Ubicaciones");
+        var item = await api.CreateItem(ApiSession.NewSku("UBIC"));
+        item = await api.Receive(item, "L-300", "A-01", 4, null);
+        item = await api.Receive(item, "L-300", "B-01", 6, null);
+        Assert.Equal(2, item.Lots.Count);
+        var second = Assert.Single(item.Lots, x => x.Location == "B-01");
+
+        var conflict = await api.TryRelocate(item, second.Id, "A-01", "Juntar lotes");
+        await ApiSession.ExpectStatus(conflict, HttpStatusCode.Conflict);
+
+        var reloaded = await api.GetItem(item.Id);
+        Assert.Equal("B-01", reloaded.Lots.Single(x => x.Id == second.Id).Location);
+        Assert.Equal(10m, reloaded.TotalQuantity);
+    }
 }

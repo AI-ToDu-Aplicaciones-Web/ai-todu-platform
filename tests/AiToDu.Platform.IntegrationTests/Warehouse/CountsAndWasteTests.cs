@@ -150,4 +150,4 @@ public sealed class CountsAndWasteTests(AiToDuApiFactory factory)
         Assert.Equal(10m, reloaded.TotalQuantity);
         Assert.Single(reloaded.Movements);
     }
-}
+}   

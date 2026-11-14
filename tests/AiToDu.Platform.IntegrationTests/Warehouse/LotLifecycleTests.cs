@@ -129,4 +129,18 @@ public sealed class LotLifecycleTests(AiToDuApiFactory factory)
         Assert.Equal(15m, lot.Quantity);
         Assert.Equal(2, reloaded.Movements.Count(x => x.Type == nameof(MovementType.Receipt)));
     }
+
+    [Fact(DisplayName = "S2-03 · El mismo lote en la misma ubicación no puede tener dos fechas de vencimiento")]
+    public async Task SameLotWithDifferentExpiry_IsRejected()
+    {
+        var api = await ApiSession.SignUpOwnerAsync(factory, "Bodega Fechas");
+        var item = await api.CreateItem(ApiSession.NewSku("FECH"));
+        item = await api.Receive(item, "L-200", "A-01", 10, factory.Today.AddDays(30));
+
+        var conflict = await api.TryReceive(item, "L-200", "A-01", 5, factory.Today.AddDays(45));
+        await ApiSession.ExpectStatus(conflict, HttpStatusCode.Conflict);
+
+        var reloaded = await api.GetItem(item.Id);
+        Assert.Equal(10m, Assert.Single(reloaded.Lots).Quantity);
+    }
 }

@@ -66,6 +66,14 @@ public sealed class ApiSession
     public Task<HttpResponseMessage> TryReturn(int itemId, ClassifyInventoryReturnResource request) =>
         Http.PostAsJsonAsync($"{InventoryUrl}/{itemId}/returns", request, Json);
 
+    public Task<HttpResponseMessage> TryRelocate(InventoryItemResource item, Guid lotId, string location, string reason) =>
+        Http.PatchAsJsonAsync($"{InventoryUrl}/{item.Id}/lots/{lotId}/location",
+            new RelocateStockLotResource(Guid.NewGuid(), item.Version, location, reason), Json);
+
+    public Task<HttpResponseMessage> TrySetQuarantine(InventoryItemResource item, Guid lotId, bool quarantined, string reason) =>
+        Http.PatchAsJsonAsync($"{InventoryUrl}/{item.Id}/lots/{lotId}/quarantine",
+            new ChangeLotQuarantineResource(Guid.NewGuid(), item.Version, quarantined, reason), Json);
+
     // ---------- Sales (only what the inventory tests need) ----------
 
     // ---------- Assertions ----------

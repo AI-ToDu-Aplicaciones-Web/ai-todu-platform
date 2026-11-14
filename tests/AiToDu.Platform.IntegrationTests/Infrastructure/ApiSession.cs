@@ -76,6 +76,22 @@ public sealed class ApiSession
 
     // ---------- Sales (only what the inventory tests need) ----------
 
+    public async Task<CustomerDto> RegisterCustomer(string name) =>
+        await Read<CustomerDto>(await Http.PostAsJsonAsync("/api/v1/customers", new { name }, Json), HttpStatusCode.OK);
+
+    public async Task<SaleDto> PaidSale(Guid customerId, int itemId, decimal quantity) =>
+        await Read<SaleDto>(await Http.PostAsJsonAsync("/api/v1/transactions", new
+        {
+            operationId = Guid.NewGuid(),
+            customerId,
+            items = new[] { new { itemId, quantity } },
+            paymentAccepted = true,
+            paymentReference = $"PAGO-{Guid.NewGuid():N}"[..17]
+        }, Json), HttpStatusCode.OK);
+
+    public async Task<SaleDto> GetSale(Guid id) =>
+        await Read<SaleDto>(await Http.GetAsync($"/api/v1/transactions/{id}"), HttpStatusCode.OK);
+
     // ---------- Assertions ----------
 
     public static async Task<T> Read<T>(HttpResponseMessage response, HttpStatusCode expected)
@@ -94,3 +110,8 @@ public sealed class ApiSession
                     $"expected {(int)expected} {expected} but got {(int)response.StatusCode} {response.StatusCode}. Body: {body}");
     }
 }
+
+public sealed record CustomerDto(Guid Id, string Name);
+public sealed record SaleDto(Guid Id, string Status, string? Receipt, decimal Total, List<SaleLineDto> Lines, List<SaleReturnDto> Returns);
+public sealed record SaleLineDto(Guid Id, int ItemId, Guid LotId, decimal Quantity, decimal Returned);
+public sealed record SaleReturnDto(Guid OperationId, Guid LineId, decimal Quantity, string Disposition, string Reason);

@@ -58,4 +58,22 @@ public sealed class LotLifecycleTests(AiToDuApiFactory factory)
         Assert.Equal(0m, receipt.Before);
         Assert.Equal(10m, receipt.After);
     }
+
+    [Fact(DisplayName = "S2-03 · SKU duplicado: se rechaza en la misma organización (sin importar mayúsculas) y se permite en otra")]
+    public async Task DuplicateSku_IsRejectedWithinOrganizationOnly()
+    {
+        var api = await ApiSession.SignUpOwnerAsync(factory, "Bodega SKU Duplicado");
+        var sku = ApiSession.NewSku("DUP");
+        var original = await api.CreateItem(sku);
+
+        await ApiSession.ExpectStatus(await api.TryCreateItem(sku), HttpStatusCode.Conflict);
+        await ApiSession.ExpectStatus(await api.TryCreateItem($"  {sku.ToLowerInvariant()} "), HttpStatusCode.Conflict);
+
+        var page = await ApiSession.Read<InventoryPageResource>(
+            await api.Http.GetAsync($"{ApiSession.InventoryUrl}?search={sku}"), HttpStatusCode.OK);
+        Assert.Equal(original.Id, Assert.Single(page.Items).Id);
+
+        var otherOrganization = await ApiSession.SignUpOwnerAsync(factory, "Otra Bodega");
+        await otherOrganization.CreateItem(sku);
+    }
 }

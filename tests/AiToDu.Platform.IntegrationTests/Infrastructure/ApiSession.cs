@@ -57,6 +57,15 @@ public sealed class ApiSession
     public async Task<InventoryItemResource> Receive(InventoryItemResource item, string lotCode, string location, decimal quantity, DateOnly? expiresOn) =>
         await Read<InventoryItemResource>(await TryReceive(item, lotCode, location, quantity, expiresOn), HttpStatusCode.OK);
 
+    public Task<HttpResponseMessage> TryMovement(int itemId, RecordInventoryMovementResource movement) =>
+        Http.PostAsJsonAsync($"{InventoryUrl}/{itemId}/movements", movement, Json);
+
+    public Task<HttpResponseMessage> TryCount(int itemId, RegisterStockCountResource count) =>
+        Http.PostAsJsonAsync($"{InventoryUrl}/{itemId}/counts", count, Json);
+
+    public Task<HttpResponseMessage> TryReturn(int itemId, ClassifyInventoryReturnResource request) =>
+        Http.PostAsJsonAsync($"{InventoryUrl}/{itemId}/returns", request, Json);
+
     // ---------- Sales (only what the inventory tests need) ----------
 
     // ---------- Assertions ----------

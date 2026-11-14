@@ -39,6 +39,24 @@ public sealed class ApiSession
 
     // ---------- Inventory ----------
 
+    public static string NewSku(string prefix) => $"{prefix}-{Guid.NewGuid():N}"[..(prefix.Length + 13)].ToUpperInvariant();
+
+    public Task<HttpResponseMessage> TryCreateItem(string sku) =>
+        Http.PostAsJsonAsync(InventoryUrl, new CreateInventoryItemResource(sku, "Producto de prueba", "Abarrotes", 2, 5.50m), Json);
+
+    public async Task<InventoryItemResource> CreateItem(string sku) =>
+        await Read<InventoryItemResource>(await TryCreateItem(sku), HttpStatusCode.Created);
+
+    public async Task<InventoryItemResource> GetItem(int id) =>
+        await Read<InventoryItemResource>(await Http.GetAsync($"{InventoryUrl}/{id}"), HttpStatusCode.OK);
+
+    public Task<HttpResponseMessage> TryReceive(InventoryItemResource item, string lotCode, string location, decimal quantity, DateOnly? expiresOn) =>
+        Http.PostAsJsonAsync($"{InventoryUrl}/{item.Id}/lots",
+            new ReceiveStockLotResource(Guid.NewGuid(), item.Version, lotCode, location, expiresOn, quantity), Json);
+
+    public async Task<InventoryItemResource> Receive(InventoryItemResource item, string lotCode, string location, decimal quantity, DateOnly? expiresOn) =>
+        await Read<InventoryItemResource>(await TryReceive(item, lotCode, location, quantity, expiresOn), HttpStatusCode.OK);
+
     // ---------- Sales (only what the inventory tests need) ----------
 
     // ---------- Assertions ----------

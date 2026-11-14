@@ -21,6 +21,22 @@ public sealed class ApiSession
 
     public HttpClient Http { get; }
 
+    public static async Task<ApiSession> SignUpOwnerAsync(AiToDuApiFactory factory, string organizationName)
+    {
+        var http = factory.CreateClient();
+        var email = $"owner-{Guid.NewGuid():N}@pruebas.aitodu.pe";
+        const string password = "Clave-Segura-2026!";
+
+        var signUp = await http.PostAsJsonAsync("/api/v1/authentication/sign-up",
+            new SignUpResource(organizationName, "Dueño de prueba", email, password), Json);
+        await ExpectStatus(signUp, HttpStatusCode.Created);
+
+        var signIn = await http.PostAsJsonAsync("/api/v1/authentication/sign-in", new SignInResource(email, password), Json);
+        var session = await Read<AuthenticatedUserResource>(signIn, HttpStatusCode.OK);
+        http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", session.Token);
+        return new ApiSession(http);
+    }
+
     // ---------- Inventory ----------
 
     // ---------- Sales (only what the inventory tests need) ----------

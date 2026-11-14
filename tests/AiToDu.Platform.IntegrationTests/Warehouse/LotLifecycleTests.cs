@@ -76,4 +76,40 @@ public sealed class LotLifecycleTests(AiToDuApiFactory factory)
         var otherOrganization = await ApiSession.SignUpOwnerAsync(factory, "Otra Bodega");
         await otherOrganization.CreateItem(sku);
     }
+
+    [Fact(DisplayName = "S2-03 · Lote vencido: no se recibe si ya venció y, al vencer, deja de estar disponible")]
+    public async Task ExpiredLot_IsNotReceivedAndStopsBeingAvailable()
+    {
+        var api = await ApiSession.SignUpOwnerAsync(factory, "Bodega Vencimientos");
+        var item = await api.CreateItem(ApiSession.NewSku("VENC"));
+
+        var expiredReceipt = await api.TryReceive(item, "L-VENCIDO", "A-01", 5, factory.Today.AddDays(-1));
+        await ApiSession.ExpectStatus(expiredReceipt, HttpStatusCode.BadRequest);
+        var unchanged = await api.GetItem(item.Id);
+        Assert.Empty(unchanged.Lots);
+        Assert.Equal(item.Version, unchanged.Version);
+
+        item = await api.Receive(item, "L-CORTO", "A-01", 5, factory.Today.AddDays(1));
+        var lot = Assert.Single(item.Lots);
+        Assert.Equal(5m, item.AvailableQuantity);
+
+        factory.Clock.Advance(TimeSpan.FromDays(2));
+        try
+        {
+            var expired = await api.GetItem(item.Id);
+            var expiredLot = Assert.Single(expired.Lots);
+            Assert.True(expiredLot.IsExpired);
+            Assert.Equal(5m, expired.TotalQuantity);
+            Assert.Equal(0m, expired.AvailableQuantity);
+
+            var issue = await api.TryMovement(item.Id, new RecordInventoryMovementResource(
+                Guid.NewGuid(), expired.Version, lot.Id, MovementType.Issue, 1, "Salida de lote vencido"));
+            await ApiSession.ExpectStatus(issue, HttpStatusCode.Conflict);
+            Assert.Equal(5m, (await api.GetItem(item.Id)).TotalQuantity);
+        }
+        finally
+        {
+            factory.Clock.Reset();
+        }
+    }
 }

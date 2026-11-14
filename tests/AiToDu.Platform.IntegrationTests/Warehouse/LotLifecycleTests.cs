@@ -161,4 +161,24 @@ public sealed class LotLifecycleTests(AiToDuApiFactory factory)
         Assert.Equal("B-01", reloaded.Lots.Single(x => x.Id == second.Id).Location);
         Assert.Equal(10m, reloaded.TotalQuantity);
     }
+
+    [Fact(DisplayName = "S2-03 · Liberar la cuarentena devuelve el lote al stock disponible")]
+    public async Task ReleasingQuarantine_RestoresAvailability()
+    {
+        var api = await ApiSession.SignUpOwnerAsync(factory, "Bodega Liberación");
+        var item = await api.CreateItem(ApiSession.NewSku("LIBE"));
+        item = await api.Receive(item, "L-400", "A-01", 10, null);
+        var lot = Assert.Single(item.Lots);
+
+        item = await ApiSession.Read<InventoryItemResource>(
+            await api.TrySetQuarantine(item, lot.Id, true, "Revisión de calidad"), HttpStatusCode.OK);
+        Assert.Equal(0m, item.AvailableQuantity);
+
+        item = await ApiSession.Read<InventoryItemResource>(
+            await api.TrySetQuarantine(item, lot.Id, false, "Calidad aprobada"), HttpStatusCode.OK);
+
+        var reloaded = await api.GetItem(item.Id);
+        Assert.False(Assert.Single(reloaded.Lots).IsQuarantined);
+        Assert.Equal(10m, reloaded.AvailableQuantity);
+    }
 }

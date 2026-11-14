@@ -116,4 +116,21 @@ public sealed class CountsAndWasteTests(AiToDuApiFactory factory)
         Assert.Contains(adjustments, x => x.Change == 2m && x.Reason == "Unidades encontradas en trastienda");
         Assert.Contains(adjustments, x => x.Change == -1m && x.Reason == "Error de digitación en la recepción");
     }
+
+    [Fact(DisplayName = "S2-04 · Una merma mayor al stock del lote se rechaza sin tocar el saldo")]
+    public async Task WasteBeyondStock_IsRejected()
+    {
+        var api = await ApiSession.SignUpOwnerAsync(factory, "Bodega Sobremerma");
+        var item = await api.CreateItem(ApiSession.NewSku("SOBR"));
+        item = await api.Receive(item, "L-060", "A-01", 3, null);
+        var lot = Assert.Single(item.Lots);
+
+        var tooMuch = await api.TryMovement(item.Id, new RecordInventoryMovementResource(
+            Guid.NewGuid(), item.Version, lot.Id, MovementType.Waste, 5, "Merma mayor al stock"));
+        await ApiSession.ExpectStatus(tooMuch, HttpStatusCode.Conflict);
+
+        var reloaded = await api.GetItem(item.Id);
+        Assert.Equal(3m, reloaded.TotalQuantity);
+        Assert.Single(reloaded.Movements);
+    }
 }

@@ -95,4 +95,25 @@ public sealed class CountsAndWasteTests(AiToDuApiFactory factory)
         Assert.Empty(reloaded.Counts);
         Assert.Single(reloaded.Movements);
     }
+
+    [Fact(DisplayName = "S2-04 · Un ajuste puede sumar o restar stock y queda registrado con su motivo")]
+    public async Task Adjustments_CanIncreaseAndDecreaseStock()
+    {
+        var api = await ApiSession.SignUpOwnerAsync(factory, "Bodega Ajustes");
+        var item = await api.CreateItem(ApiSession.NewSku("AJUS"));
+        item = await api.Receive(item, "L-050", "A-01", 10, null);
+        var lot = Assert.Single(item.Lots);
+
+        item = await ApiSession.Read<InventoryItemResource>(await api.TryMovement(item.Id, new RecordInventoryMovementResource(
+            Guid.NewGuid(), item.Version, lot.Id, MovementType.Adjustment, 2, "Unidades encontradas en trastienda")), HttpStatusCode.OK);
+        item = await ApiSession.Read<InventoryItemResource>(await api.TryMovement(item.Id, new RecordInventoryMovementResource(
+            Guid.NewGuid(), item.Version, lot.Id, MovementType.Adjustment, -1, "Error de digitación en la recepción")), HttpStatusCode.OK);
+
+        var reloaded = await api.GetItem(item.Id);
+        Assert.Equal(11m, reloaded.TotalQuantity);
+        var adjustments = reloaded.Movements.Where(x => x.Type == nameof(MovementType.Adjustment)).ToList();
+        Assert.Equal(2, adjustments.Count);
+        Assert.Contains(adjustments, x => x.Change == 2m && x.Reason == "Unidades encontradas en trastienda");
+        Assert.Contains(adjustments, x => x.Change == -1m && x.Reason == "Error de digitación en la recepción");
+    }
 }

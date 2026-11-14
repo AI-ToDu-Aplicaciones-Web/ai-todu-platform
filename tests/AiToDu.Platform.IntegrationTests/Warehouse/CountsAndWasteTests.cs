@@ -73,4 +73,26 @@ public sealed class CountsAndWasteTests(AiToDuApiFactory factory)
         Assert.Equal(9m, reloaded.TotalQuantity);
         Assert.Single(reloaded.Movements, x => x.Type == nameof(MovementType.Waste));
     }
+
+    [Fact(DisplayName = "S2-04 · Se rechaza una merma sin motivo y un conteo cuyo saldo esperado ya no coincide")]
+    public async Task WasteWithoutReasonAndOutdatedCount_AreRejected()
+    {
+        var api = await ApiSession.SignUpOwnerAsync(factory, "Bodega Validaciones");
+        var item = await api.CreateItem(ApiSession.NewSku("VALI"));
+        item = await api.Receive(item, "L-030", "A-01", 10, null);
+        var lot = Assert.Single(item.Lots);
+
+        var noReason = await api.TryMovement(item.Id, new RecordInventoryMovementResource(
+            Guid.NewGuid(), item.Version, lot.Id, MovementType.Waste, 1, "   "));
+        await ApiSession.ExpectStatus(noReason, HttpStatusCode.BadRequest);
+
+        var outdatedCount = await api.TryCount(item.Id, new RegisterStockCountResource(
+            Guid.NewGuid(), item.Version, lot.Id, 9, 8, "Conteo con saldo desactualizado"));
+        await ApiSession.ExpectStatus(outdatedCount, HttpStatusCode.Conflict);
+
+        var reloaded = await api.GetItem(item.Id);
+        Assert.Equal(10m, reloaded.TotalQuantity);
+        Assert.Empty(reloaded.Counts);
+        Assert.Single(reloaded.Movements);
+    }
 }

@@ -133,4 +133,21 @@ public sealed class CountsAndWasteTests(AiToDuApiFactory factory)
         Assert.Equal(3m, reloaded.TotalQuantity);
         Assert.Single(reloaded.Movements);
     }
+
+    [Fact(DisplayName = "S2-04 · Un ajuste de cero unidades se rechaza")]
+    public async Task ZeroAdjustment_IsRejected()
+    {
+        var api = await ApiSession.SignUpOwnerAsync(factory, "Bodega Ajuste Cero");
+        var item = await api.CreateItem(ApiSession.NewSku("CERO"));
+        item = await api.Receive(item, "L-070", "A-01", 10, null);
+        var lot = Assert.Single(item.Lots);
+
+        var zero = await api.TryMovement(item.Id, new RecordInventoryMovementResource(
+            Guid.NewGuid(), item.Version, lot.Id, MovementType.Adjustment, 0, "Ajuste sin cambio"));
+        await ApiSession.ExpectStatus(zero, HttpStatusCode.BadRequest);
+
+        var reloaded = await api.GetItem(item.Id);
+        Assert.Equal(10m, reloaded.TotalQuantity);
+        Assert.Single(reloaded.Movements);
+    }
 }

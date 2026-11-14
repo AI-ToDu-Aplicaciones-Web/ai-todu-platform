@@ -1,0 +1,61 @@
+using System.Net;
+using System.Net.Http.Json;
+using AiToDu.Platform.IntegrationTests.Infrastructure;
+using AiToDu.Platform.Warehouse.Domain.Model.ValueObjects;
+using AiToDu.Platform.Warehouse.Interfaces.Rest.Resources;
+
+namespace AiToDu.Platform.IntegrationTests.Warehouse;
+
+/// <summary>S2-03: products, SKU lookup, location, lots, expiry and quarantine.</summary>
+[Collection(ApiCollection.Name)]
+public sealed class LotLifecycleTests(AiToDuApiFactory factory)
+{
+    [Fact(DisplayName = "S2-03 · Lote: recibir 10, buscar por SKU, reubicar y poner en cuarentena deja 10 físicas y 0 disponibles")]
+    public async Task LotLifecycle_KeepsPhysicalStockButRemovesAvailability()
+    {
+        var api = await ApiSession.SignUpOwnerAsync(factory, "Bodega Ciclo de Lote");
+        var sku = ApiSession.NewSku("LOTE");
+
+        var item = await api.CreateItem(sku);
+        Assert.Equal(0m, item.TotalQuantity);
+
+        item = await api.Receive(item, "L-001", "A-01", 10, factory.Today.AddDays(30));
+        var lot = Assert.Single(item.Lots);
+        Assert.Equal(10m, item.TotalQuantity);
+        Assert.Equal(10m, item.AvailableQuantity);
+
+        // Locate it by SKU (lookup is case-insensitive) and through the search used by the SPA.
+        var bySku = await ApiSession.Read<InventoryItemResource>(
+            await api.Http.GetAsync($"{ApiSession.InventoryUrl}/by-sku/{sku.ToLowerInvariant()}"), HttpStatusCode.OK);
+        Assert.Equal(item.Id, bySku.Id);
+        var page = await ApiSession.Read<InventoryPageResource>(
+            await api.Http.GetAsync($"{ApiSession.InventoryUrl}?search={sku}"), HttpStatusCode.OK);
+        Assert.Contains(page.Items, x => x.Id == item.Id);
+
+        item = await ApiSession.Read<InventoryItemResource>(
+            await api.TryRelocate(item, lot.Id, "B-02", "Reordenamiento del almacén"), HttpStatusCode.OK);
+
+        item = await ApiSession.Read<InventoryItemResource>(
+            await api.TrySetQuarantine(item, lot.Id, true, "Empaque dañado en recepción"), HttpStatusCode.OK);
+
+        // A quarantined lot cannot be issued.
+        var issue = await api.TryMovement(item.Id, new RecordInventoryMovementResource(
+            Guid.NewGuid(), item.Version, lot.Id, MovementType.Issue, 1, "Salida de prueba"));
+        await ApiSession.ExpectStatus(issue, HttpStatusCode.Conflict);
+
+        // Query the API again: the state must come from the database, not from the last response.
+        var reloaded = await api.GetItem(item.Id);
+        Assert.Equal(10m, reloaded.TotalQuantity);
+        Assert.Equal(0m, reloaded.AvailableQuantity);
+        Assert.Equal("STOCK_OUT", reloaded.Status);
+        var reloadedLot = Assert.Single(reloaded.Lots);
+        Assert.Equal(lot.Id, reloadedLot.Id);
+        Assert.Equal("B-02", reloadedLot.Location);
+        Assert.True(reloadedLot.IsQuarantined);
+        Assert.Equal(10m, reloadedLot.Quantity);
+        var receipt = Assert.Single(reloaded.Movements);
+        Assert.Equal(nameof(MovementType.Receipt), receipt.Type);
+        Assert.Equal(0m, receipt.Before);
+        Assert.Equal(10m, receipt.After);
+    }
+}

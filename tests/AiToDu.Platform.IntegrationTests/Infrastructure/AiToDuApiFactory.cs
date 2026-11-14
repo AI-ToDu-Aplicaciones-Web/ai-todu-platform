@@ -77,3 +77,9 @@ public sealed class AiToDuApiFactory : WebApplicationFactory<Program>, IAsyncLif
         };
     }
 }
+
+[CollectionDefinition(Name)]
+public sealed class ApiCollection : ICollectionFixture<AiToDuApiFactory>
+{
+    public const string Name = "AI-ToDu API";
+}

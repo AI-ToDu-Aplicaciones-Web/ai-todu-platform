@@ -112,4 +112,21 @@ public sealed class LotLifecycleTests(AiToDuApiFactory factory)
             factory.Clock.Reset();
         }
     }
+
+    [Fact(DisplayName = "S2-03 · Recibir otra vez el mismo lote en la misma ubicación suma unidades sin crear otro lote")]
+    public async Task SameLotAndLocation_AccumulatesQuantity()
+    {
+        var api = await ApiSession.SignUpOwnerAsync(factory, "Bodega Reposición");
+        var item = await api.CreateItem(ApiSession.NewSku("REPO"));
+        var expiry = factory.Today.AddDays(30);
+
+        item = await api.Receive(item, "L-100", "A-01", 10, expiry);
+        item = await api.Receive(item, "l-100", "A-01", 5, expiry);
+
+        var reloaded = await api.GetItem(item.Id);
+        var lot = Assert.Single(reloaded.Lots);
+        Assert.Equal("L-100", lot.Code);
+        Assert.Equal(15m, lot.Quantity);
+        Assert.Equal(2, reloaded.Movements.Count(x => x.Type == nameof(MovementType.Receipt)));
+    }
 }

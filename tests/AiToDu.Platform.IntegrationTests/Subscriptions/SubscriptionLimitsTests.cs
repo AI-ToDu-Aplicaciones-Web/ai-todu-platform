@@ -42,6 +42,29 @@ public sealed class SubscriptionLimitsTests(AiToDuApiFactory factory)
         Assert.Equal("starter", (await api.GetSubscription()).Plan);
     }
 
+    [Fact(DisplayName = "Suscripciones · Rechazar el cambio a Starter con diez usuarios conserva Growth y las cuentas")]
+    public async Task DowngradeToStarter_WhenOverUserLimit_PreservesPlanAndUsers()
+    {
+        var api = await ApiSession.SignUpOwnerAsync(factory, "Suscripción Cambio Incompatible");
+        var currentUsers = await api.GetUsers();
+        Assert.Single(currentUsers);
+
+        await ApiSession.ExpectStatus(await api.TryChoosePlan("growth"), HttpStatusCode.OK);
+        for (var index = 1; index < 10; index++)
+            await api.RegisterUser($"Operador {index}", NewEmail());
+
+        var usersBeforeDowngrade = await api.GetUsers();
+        Assert.Equal(10, usersBeforeDowngrade.Count);
+        Assert.Equal("growth", (await api.GetSubscription()).Plan);
+
+        await ApiSession.ExpectStatus(await api.TryChoosePlan("starter"), HttpStatusCode.Conflict);
+
+        var usersAfterDowngrade = await api.GetUsers();
+        Assert.Equal(usersBeforeDowngrade.Select(user => user.Id).Order().ToArray(),
+            usersAfterDowngrade.Select(user => user.Id).Order().ToArray());
+        Assert.Equal("growth", (await api.GetSubscription()).Plan);
+    }
+
     private static async Task<InventoryPageResource> ReadInventoryPage(ApiSession api) =>
         await ApiSession.Read<InventoryPageResource>(await api.Http.GetAsync("/api/v1/inventory-items?page=1&pageSize=1"), HttpStatusCode.OK);
 

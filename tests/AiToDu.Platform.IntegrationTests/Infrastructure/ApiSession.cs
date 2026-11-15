@@ -89,8 +89,51 @@ public sealed class ApiSession
             paymentReference = $"PAGO-{Guid.NewGuid():N}"[..17]
         }, Json), HttpStatusCode.OK);
 
+    public Task<HttpResponseMessage> TryCheckout(Guid operationId, Guid customerId,
+        IReadOnlyCollection<CheckoutLineRequest> items, bool paymentAccepted, string paymentReference) =>
+        Http.PostAsJsonAsync("/api/v1/transactions", new
+        {
+            operationId,
+            customerId,
+            items,
+            paymentAccepted,
+            paymentReference
+        }, Json);
+
+    public Task<HttpResponseMessage> TryPay(Guid saleId, string reference) =>
+        Http.PostAsJsonAsync($"/api/v1/transactions/{saleId}/payment", new { reference }, Json);
+
     public async Task<SaleDto> GetSale(Guid id) =>
         await Read<SaleDto>(await Http.GetAsync($"/api/v1/transactions/{id}"), HttpStatusCode.OK);
+
+    public async Task<SaleReceiptDto> GetReceipt(Guid id) =>
+        await Read<SaleReceiptDto>(await Http.GetAsync($"/api/v1/transactions/{id}/receipt"), HttpStatusCode.OK);
+
+    public async Task<List<SaleDto>> GetSalesHistory() =>
+        await Read<List<SaleDto>>(await Http.GetAsync("/api/v1/transactions"), HttpStatusCode.OK);
+
+    // ---------- Organization limits ----------
+
+    public Task<HttpResponseMessage> TryRegisterUser(string fullName, string email, string role = "WAREHOUSE_OPERATOR") =>
+        Http.PostAsJsonAsync("/api/v1/users", new
+        {
+            fullName,
+            email,
+            password = "Clave-Segura-2026!",
+            role
+        }, Json);
+
+    public async Task<UserResource> RegisterUser(string fullName, string email, string role = "WAREHOUSE_OPERATOR") =>
+        await Read<UserResource>(await TryRegisterUser(fullName, email, role), HttpStatusCode.Created);
+
+    public async Task<List<UserResource>> GetUsers() =>
+        await Read<List<UserResource>>(await Http.GetAsync("/api/v1/users"), HttpStatusCode.OK);
+
+    public async Task<SubscriptionDto> GetSubscription() =>
+        await Read<SubscriptionDto>(await Http.GetAsync("/api/v1/subscription"), HttpStatusCode.OK);
+
+    public Task<HttpResponseMessage> TryChoosePlan(string plan) =>
+        Http.PutAsJsonAsync("/api/v1/subscription", new { plan }, Json);
 
     // ---------- Assertions ----------
 
@@ -112,6 +155,9 @@ public sealed class ApiSession
 }
 
 public sealed record CustomerDto(Guid Id, string Name);
-public sealed record SaleDto(Guid Id, string Status, string? Receipt, decimal Total, List<SaleLineDto> Lines, List<SaleReturnDto> Returns);
+public sealed record CheckoutLineRequest(int ItemId, decimal Quantity);
+public sealed record SaleDto(Guid Id, Guid OperationId, string Status, string? Receipt, decimal Total, List<SaleLineDto> Lines, List<SaleReturnDto> Returns);
 public sealed record SaleLineDto(Guid Id, int ItemId, Guid LotId, decimal Quantity, decimal Returned);
 public sealed record SaleReturnDto(Guid OperationId, Guid LineId, decimal Quantity, string Disposition, string Reason);
+public sealed record SaleReceiptDto(string Receipt, decimal Total);
+public sealed record SubscriptionDto(Guid OrganizationId, string Plan);

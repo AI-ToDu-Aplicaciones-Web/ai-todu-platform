@@ -56,6 +56,10 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
                         .HasColumnType("varchar(512)")
                         .HasColumnName("path");
 
+                    b.Property<int>("StatusCode")
+                        .HasColumnType("int")
+                        .HasColumnName("status_code");
+
                     b.HasKey("Id")
                         .HasName("p_k_audit_entries");
 

@@ -3,6 +3,7 @@ using AiToDu.Platform.Activity.Domain.Model;
 using AiToDu.Platform.Shared.Infrastructure.Persistence.EntityFrameworkCore.Configuration;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace AiToDu.Platform.Activity.Interfaces.Rest;
 
@@ -26,7 +27,8 @@ public sealed class AuditFilter(IServiceScopeFactory scopes) : IAsyncActionFilte
                 ? "subscriptions"
                 : path.Split('/', StringSplitOptions.RemoveEmptyEntries).Skip(2).FirstOrDefault() ?? "api";
         if (path.Length > 512) path = path[..512];
-        db.Add(new AuditEntry(Guid.NewGuid(), organization, actor, module, http.Request.Method, path, DateTime.UtcNow));
+        var statusCode = (result.Result as IStatusCodeActionResult)?.StatusCode ?? http.Response.StatusCode;
+        db.Add(new AuditEntry(Guid.NewGuid(), organization, actor, module, http.Request.Method, path, statusCode, DateTime.UtcNow));
         await db.SaveChangesAsync(CancellationToken.None);
     }
 }

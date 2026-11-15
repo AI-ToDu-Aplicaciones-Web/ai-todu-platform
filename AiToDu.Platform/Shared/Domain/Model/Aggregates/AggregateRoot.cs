@@ -1,12 +1,9 @@
-using AiTodu.Platform.Shared.Domain.Model.Events;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using AiToDu.Platform.Shared.Domain.Model.Events;
 
-namespace AiTodu.Platform.Shared.Domain.Model.Aggregates;
-
-public interface IAggregateRoot
-{
-    IReadOnlyCollection<IEvent> DomainEvents { get; }
-    void ClearDomainEvents();
-}
+namespace AiToDu.Platform.Shared.Domain.Model.Aggregates;
 
 public abstract class AggregateRoot : IAggregateRoot
 {
@@ -17,6 +14,9 @@ public abstract class AggregateRoot : IAggregateRoot
 
     protected void AddDomainEvent(Func<IEvent> domainEventFactory) =>
         _domainEventFactories.Add(domainEventFactory);
+
+    protected void AddDomainEvent(IEvent domainEvent) =>
+        _domainEventFactories.Add(() => domainEvent);
 
     public void ClearDomainEvents() => _domainEventFactories.Clear();
 }

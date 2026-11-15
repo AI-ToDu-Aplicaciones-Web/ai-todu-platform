@@ -1,1 +1,13 @@
-{"profiles":{"Warehouse":{"commandName":"Project","launchBrowser":false,"applicationUrl":"http://localhost:5080","environmentVariables":{"ASPNETCORE_ENVIRONMENT":"Development"}}}}
+{
+  "profiles": {
+    "Warehouse": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "scalar/v1",
+      "applicationUrl": "http://localhost:5080",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

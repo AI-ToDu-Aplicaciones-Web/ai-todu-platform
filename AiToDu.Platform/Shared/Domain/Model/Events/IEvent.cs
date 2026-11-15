@@ -1,10 +1,15 @@
 using Cortex.Mediator.Notifications;
 
-namespace AiTodu.Platform.Shared.Domain.Model.Events;
-
-/// <summary>
-///     Represents a domain event in the system.
-/// </summary>
-public interface IEvent : INotification
+namespace AiToDu.Platform.Shared.Domain.Model.Events
 {
+    public interface IEvent : INotification
+    {
+    }
+}
+
+namespace AiTodu.Platform.Shared.Domain.Model.Events
+{
+    public interface IEvent : AiToDu.Platform.Shared.Domain.Model.Events.IEvent
+    {
+    }
 }

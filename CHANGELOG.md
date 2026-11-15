@@ -13,4 +13,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Iam` Bounded Context: JWT authentication, BCrypt password hashing, organization user lifecycle, and role/permission access control.
 - `Warehouse` Bounded Context: `InventoryItem` aggregate root, strongly-typed IDs, lot quarantine control, stock classification, and Anti-Corruption Layer (ACL).
 - `Sales`, `Subscriptions`, and `Activity` Bounded Contexts with bilingual localization (`en-US` and `es-419`) and OpenAPI / Scalar interactive documentation (`/scalar/v1`).
-  "@ | Set-Content -Path CHANGELOG.md -Encoding UTF8
+  "@ | Set-Content -Path CHANGELOG.md -Encoding UTF8 
+- 

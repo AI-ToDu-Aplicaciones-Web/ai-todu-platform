@@ -1,5 +1,6 @@
 using System.Net;
 using AiToDu.Platform.IntegrationTests.Infrastructure;
+using AiToDu.Platform.Warehouse.Interfaces.Rest.Resources;
 
 namespace AiToDu.Platform.IntegrationTests.Subscriptions;
 
@@ -21,6 +22,28 @@ public sealed class SubscriptionLimitsTests(AiToDuApiFactory factory)
         Assert.DoesNotContain(users, user => user.Email == rejectedEmail);
         Assert.Equal("starter", (await api.GetSubscription()).Plan);
     }
+
+    [Fact(DisplayName = "Suscripciones · Starter admite 500 SKU y rechaza el 501 sin guardar el producto")]
+    public async Task Starter_RejectsSkuBeyondLimitWithoutCreatingIt()
+    {
+        var api = await ApiSession.SignUpOwnerAsync(factory, "Starter Límite de SKU");
+        for (var index = 0; index < 500; index++)
+            await api.CreateItem(ApiSession.NewSku($"S{index:D3}"));
+
+        var before = await ReadInventoryPage(api);
+        Assert.Equal(500, before.Total);
+
+        var extraSku = ApiSession.NewSku("EXTR");
+        await ApiSession.ExpectStatus(await api.TryCreateItem(extraSku), HttpStatusCode.Conflict);
+
+        var after = await ReadInventoryPage(api);
+        Assert.Equal(500, after.Total);
+        Assert.DoesNotContain(after.Items, item => item.Sku == extraSku);
+        Assert.Equal("starter", (await api.GetSubscription()).Plan);
+    }
+
+    private static async Task<InventoryPageResource> ReadInventoryPage(ApiSession api) =>
+        await ApiSession.Read<InventoryPageResource>(await api.Http.GetAsync("/api/v1/inventory-items?page=1&pageSize=1"), HttpStatusCode.OK);
 
     private static string NewEmail() => $"usuario-{Guid.NewGuid():N}@pruebas.aitodu.pe";
 }

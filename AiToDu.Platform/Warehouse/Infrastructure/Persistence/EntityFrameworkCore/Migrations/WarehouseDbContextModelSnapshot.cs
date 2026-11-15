@@ -31,9 +31,16 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
                         .HasColumnName("actor_id");
 
                     b.Property<string>("Method")
+                        .HasMaxLength(10)
                         .IsRequired()
-                        .HasColumnType("longtext")
+                        .HasColumnType("varchar(10)")
                         .HasColumnName("method");
+
+                    b.Property<string>("Module")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("module");
 
                     b.Property<DateTime>("OccurredAt")
                         .HasColumnType("datetime(6)")
@@ -44,8 +51,9 @@ namespace AiToDu.Platform.Warehouse.Infrastructure.Persistence.EntityFrameworkCo
                         .HasColumnName("organization_id");
 
                     b.Property<string>("Path")
+                        .HasMaxLength(512)
                         .IsRequired()
-                        .HasColumnType("longtext")
+                        .HasColumnType("varchar(512)")
                         .HasColumnName("path");
 
                     b.HasKey("Id")

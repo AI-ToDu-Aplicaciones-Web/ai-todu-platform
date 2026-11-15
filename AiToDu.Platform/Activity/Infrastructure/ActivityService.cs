@@ -12,6 +12,9 @@ public sealed class AuditMapping : IEntityTypeConfiguration<AuditEntry>
     public void Configure(EntityTypeBuilder<AuditEntry> e)
     {
         e.ToTable("audit_entries"); e.HasKey(x => x.Id);
+        e.Property(x => x.Module).HasMaxLength(32).IsRequired();
+        e.Property(x => x.Method).HasMaxLength(10).IsRequired();
+        e.Property(x => x.Path).HasMaxLength(512).IsRequired();
         e.HasIndex(x => new { x.OrganizationId, x.OccurredAt }).HasDatabaseName("ix_audit_org_date");
     }
 }

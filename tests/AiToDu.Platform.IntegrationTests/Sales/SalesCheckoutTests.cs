@@ -29,6 +29,24 @@ public sealed class SalesCheckoutTests(AiToDuApiFactory factory)
         Assert.Single((await api.GetSalesHistory()).Where(x => x.OperationId == operationId));
     }
 
+    [Fact(DisplayName = "Ventas · Reutilizar operationId con otro carrito se rechaza sin otra venta ni descuento")]
+    public async Task CheckoutOperationId_WithChangedCart_IsRejectedWithoutSideEffects()
+    {
+        var api = await ApiSession.SignUpOwnerAsync(factory, "Ventas Referencia Reutilizada");
+        var item = await api.CreateItem(ApiSession.NewSku("REFE"));
+        item = await api.Receive(item, "LOTE-1", "A-01", 10, null);
+        var customer = await api.RegisterCustomer("Cliente Referencia Reutilizada");
+        var operationId = Guid.NewGuid();
+
+        await ApiSession.Read<SaleDto>(await api.TryCheckout(operationId, customer.Id,
+            [new(item.Id, 3)], paymentAccepted: true, paymentReference: "PAGO-REFERENCIA"), HttpStatusCode.OK);
+        await ApiSession.ExpectStatus(await api.TryCheckout(operationId, customer.Id,
+            [new(item.Id, 4)], paymentAccepted: true, paymentReference: "PAGO-REFERENCIA"), HttpStatusCode.Conflict);
+
+        Assert.Equal(7m, (await api.GetItem(item.Id)).AvailableQuantity);
+        Assert.Single((await api.GetSalesHistory()).Where(x => x.OperationId == operationId));
+    }
+
     [Fact(DisplayName = "Ventas · El carrito falla en la segunda línea y revierte la primera salida de inventario")]
     public async Task CheckoutWithInsufficientSecondLine_RollsBackTheWholeCart()
     {
